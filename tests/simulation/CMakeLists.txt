@@ -1,0 +1,5 @@
+set(SOURCES ToyMCSimulation.cpp)
+add_executable(QnToolsSimulationTests ${SOURCES})
+target_include_directories(QnToolsSimulationTests PRIVATE ${ROOT_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/simulation)
+target_link_libraries(QnToolsSimulationTests PUBLIC ROOTVecOps gtest_main QnToolsCorrection QnToolsDataFrame)
+gtest_add_tests(TARGET QnToolsSimulationTests)

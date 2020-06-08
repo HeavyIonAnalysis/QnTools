@@ -1,0 +1,11 @@
+# Ignore build directory
+build
+.idea
+
+# macOS files
+.DS_STORE
+
+# vim temp files
+*.swp
+*.swo
+*~
