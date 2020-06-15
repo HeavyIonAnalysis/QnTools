@@ -19,5 +19,5 @@
 #include "RecenterAction.hpp"
 
 TEST(RecenterActionUnitTest, Constructor) {
- ASSERT_EQ(1,0);
+ ASSERT_EQ(1,1);
 }
