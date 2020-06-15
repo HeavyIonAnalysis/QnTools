@@ -11,13 +11,14 @@ set(dataframe_headers common/AverageHelper.hpp
         correlation/CorrelationAction.hpp
         correlation/ReSampleHelper.hpp)
 
-list(APPEND DataFrameIncludePath "${CMAKE_CURRENT_SOURCE_DIR}"
+list(APPEND DataFrameIncludePath
+        "${ROOT_INCLUDE_DIRS}"
+        "${CMAKE_CURRENT_SOURCE_DIR}"
         "${CMAKE_CURRENT_SOURCE_DIR}/common"
         "${CMAKE_CURRENT_SOURCE_DIR}/correction"
         "${CMAKE_CURRENT_SOURCE_DIR}/correlation")
 target_include_directories(${PROJECT_NAME}
         INTERFACE
-        ${ROOT_INCLUDE_DIRS}
         $<INSTALL_INTERFACE:include/QnTools>
         "$<BUILD_INTERFACE:${DataFrameIncludePath}>"
         )
