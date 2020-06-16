@@ -156,6 +156,7 @@ class QVector {
     n_ = 0;
     sum_weights_ = 0.;
     quality_ = false;
+    for (auto &q : q_) { q = QVec(); }
   }
 
   /**
