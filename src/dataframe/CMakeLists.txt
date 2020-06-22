@@ -22,8 +22,9 @@ target_include_directories(${PROJECT_NAME}
         $<INSTALL_INTERFACE:include/QnTools>
         "$<BUILD_INTERFACE:${DataFrameIncludePath}>"
         )
-target_link_libraries(${PROJECT_NAME} INTERFACE QnToolsBase ${ROOT_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} INTERFACE QnTools::Base ${ROOT_LIBRARIES})
 add_library(QnTools::DataFrame ALIAS ${PROJECT_NAME})
+set_property(TARGET ${PROJECT_NAME} PROPERTY EXPORT_NAME DataFrame)
 
 # link to the gtest library if test are enabled
 IF (CMAKE_BUILD_TYPE MATCHES Debug)
