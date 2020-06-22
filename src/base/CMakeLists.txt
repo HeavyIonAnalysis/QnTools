@@ -8,7 +8,7 @@ add_custom_command(OUTPUT G__${PROJECT_NAME}.cxx
         -rmf lib${PROJECT_NAME}.rootmap
         -s lib${PROJECT_NAME}
         -I${CMAKE_CURRENT_SOURCE_DIR}
-        ${CMAKE_CURRENT_SOURCE_DIR}/${HEADERS}
+        ${HEADERS}
         ${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}LinkDef.h
         )
 add_library(${PROJECT_NAME} SHARED ${SOURCES} G__${PROJECT_NAME}.cxx)
