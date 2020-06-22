@@ -2,9 +2,9 @@ project(QnToolsBase)
 set(SOURCES QVector.cpp DataContainerHelper.cpp Stats.cpp ReSamples.cpp)
 set(HEADERS DataContainer.hpp DataContainerHelper.hpp Axis.hpp QVector.hpp Stats.hpp Cuts.hpp Statistic.hpp ReSamples.hpp)
 
-ROOT_GENERATE_DICTIONARY(G__${PROJECT_NAME}.cxx ${HEADERS} ${PROJECT_NAME}LinkDef.h)
+ROOT_GENERATE_DICTIONARY(G__${PROJECT_NAME} ${HEADERS} LINKDEF ${PROJECT_NAME}LinkDef.h)
 
-add_library(${PROJECT_NAME} SHARED ${SOURCES} G__${PROJECT_NAME}.cxx)
+add_library(${PROJECT_NAME} SHARED ${SOURCES} G__${PROJECT_NAME})
 add_library(QnTools::Base ALIAS ${PROJECT_NAME})
 set_property(TARGET ${PROJECT_NAME} PROPERTY EXPORT_NAME Base)
 

@@ -26,13 +26,11 @@
 #pragma link C++ nestedtypedef;
 
 #pragma link C++ class Qn::Axis < double> + ;
-#pragma link C++ class vector < Qn::Axis> + ;
 #pragma link C++ class Qn::QVec + ;
 #pragma link C++ class Qn::QVector + ;
 #pragma link C++ class Qn::ReSamples + ;
 #pragma link C++ class Qn::Statistic + ;
 #pragma link C++ class Qn::Stats + ;
-#pragma link C++ class Qn::Cuts + ;
 #pragma link C++ class Qn::DataContainer < Qn::Stats, Qn::Axis < double>> + ;
 #pragma link C++ class Qn::DataContainer < Qn::Statistic, Qn::Axis < double>> + ;
 #pragma link C++ class Qn::DataContainer < Qn::QVector, Qn::Axis < double>> + ;
@@ -45,7 +43,6 @@
 #pragma link C++ typedef Qn::DataContainerStats;
 #pragma link C++ typedef Qn::DataContainerStatistic;
 #pragma link C++ typedef Qn::DataContainerQVector;
-#pragma link C++ typedef Qn::Errors;
 
 #pragma link C++ function Qn::ToTGraph;
 #pragma link C++ function Qn::ToBootstrapScatterGraph;

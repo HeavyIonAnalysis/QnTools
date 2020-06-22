@@ -49,9 +49,9 @@ set(HEADERS
         QAHistogram.hpp
         )
 
-ROOT_GENERATE_DICTIONARY(G__${PROJECT_NAME}.cxx ${HEADERS} ${PROJECT_NAME}LinkDef.h)
+ROOT_GENERATE_DICTIONARY(G__${PROJECT_NAME} ${HEADERS} OPTIONS -I ${CMAKE_SOURCE_DIR}/src/base LINKDEF ${PROJECT_NAME}LinkDef.h)
 
-add_library(${PROJECT_NAME} SHARED ${SOURCES} G__${PROJECT_NAME}.cxx)
+add_library(${PROJECT_NAME} SHARED ${SOURCES} G__${PROJECT_NAME})
 add_library(QnTools::Correction ALIAS ${PROJECT_NAME})
 set_property(TARGET ${PROJECT_NAME} PROPERTY EXPORT_NAME Correction)
 target_compile_definitions(${PROJECT_NAME} PUBLIC "-DUSE_ROOT")
