@@ -2,15 +2,8 @@ project(QnToolsBase)
 set(SOURCES QVector.cpp DataContainerHelper.cpp Stats.cpp ReSamples.cpp)
 set(HEADERS DataContainer.hpp DataContainerHelper.hpp Axis.hpp QVector.hpp Stats.hpp Cuts.hpp Statistic.hpp ReSamples.hpp)
 
-add_custom_command(OUTPUT G__${PROJECT_NAME}.cxx
-        COMMAND ${ROOTCLING} -v -f G__${PROJECT_NAME}.cxx
-        -rml lib${PROJECT_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}
-        -rmf lib${PROJECT_NAME}.rootmap
-        -s lib${PROJECT_NAME}
-        -I${CMAKE_CURRENT_SOURCE_DIR}
-        ${CMAKE_CURRENT_SOURCE_DIR}/${HEADERS}
-        ${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}LinkDef.h
-        )
+ROOT_GENERATE_DICTIONARY(G__${PROJECT_NAME}.cxx ${HEADERS} ${PROJECT_NAME}LinkDef.h)
+
 add_library(${PROJECT_NAME} SHARED ${SOURCES} G__${PROJECT_NAME}.cxx)
 add_library(QnTools::Base ALIAS ${PROJECT_NAME})
 set_property(TARGET ${PROJECT_NAME} PROPERTY EXPORT_NAME Base)
