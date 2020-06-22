@@ -8,19 +8,6 @@ project(QnTools VERSION 0.1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 
-#if (APPLE)
-#    set(CMAKE_MACOSX_RPATH 1)
-#    add_definitions(-DGTEST_USE_OWN_TR1_TUPLE)
-#    add_definitions(-D__GLIBCXX__)
-#endif (APPLE)
-
-#add_compile_options("-Wall" "-Wextra"
-#        "$<$<CONFIG:RELEASE>:-O3;-march=native;-ftree-vectorize;-ffast-math>"
-#        "$<$<CONFIG:DEBUG>:-O0;-O0>")
-#if ("${CMAKE_COMPILER_ID}" STREQUAL "Clang")
-#    add_compile_options("-stdlib=libc++")
-#endif ()
-
 # Doxygen
 option(BUILD_DOC "Build documentation" OFF)
 

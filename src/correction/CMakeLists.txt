@@ -60,6 +60,7 @@ add_custom_command(OUTPUT G__${PROJECT_NAME}.cxx
         )
 add_library(${PROJECT_NAME} SHARED ${SOURCES} G__${PROJECT_NAME}.cxx)
 add_library(QnTools::Correction ALIAS ${PROJECT_NAME})
+set_property(TARGET ${PROJECT_NAME} PROPERTY EXPORT_NAME Correction)
 target_compile_definitions(${PROJECT_NAME} PUBLIC "-DUSE_ROOT")
 target_include_directories(${PROJECT_NAME}
         PRIVATE
@@ -69,7 +70,7 @@ target_include_directories(${PROJECT_NAME}
         $<INSTALL_INTERFACE:include/QnTools>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
         )
-target_link_libraries(${PROJECT_NAME} PUBLIC QnToolsBase PRIVATE ${ROOT_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PUBLIC QnTools::Base PRIVATE ${ROOT_LIBRARIES})
 
 # link to the gtest library if test are enabled
 IF (CMAKE_BUILD_TYPE MATCHES Debug)

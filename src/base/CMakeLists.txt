@@ -13,6 +13,7 @@ add_custom_command(OUTPUT G__${PROJECT_NAME}.cxx
         )
 add_library(${PROJECT_NAME} SHARED ${SOURCES} G__${PROJECT_NAME}.cxx)
 add_library(QnTools::Base ALIAS ${PROJECT_NAME})
+set_property(TARGET ${PROJECT_NAME} PROPERTY EXPORT_NAME Base)
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC "-DUSE_ROOT")
 target_include_directories(${PROJECT_NAME}
