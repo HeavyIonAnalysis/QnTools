@@ -90,16 +90,14 @@ void CorrectionManager::InitializeOnNode() {
 
 bool CorrectionManager::ProcessEvent() {
   event_passed_cuts_ = event_cuts_.CheckCuts(0);
-  if (event_passed_cuts_) {
-    event_cuts_.FillReport();
-    variable_manager_.UpdateOutVariables();
-    event_histograms_.Fill();
-  }
   return event_passed_cuts_;
 }
 
 void CorrectionManager::ProcessCorrections() {
   if (event_passed_cuts_) {
+    event_cuts_.FillReport();
+    variable_manager_.UpdateOutVariables();
+    event_histograms_.Fill();
     detectors_.ProcessCorrections();
     detectors_.FillReport();
     if (fill_output_tree_) out_tree_->Fill();

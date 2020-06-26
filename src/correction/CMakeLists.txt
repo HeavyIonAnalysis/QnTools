@@ -49,16 +49,9 @@ set(HEADERS
         QAHistogram.hpp
         )
 
-add_custom_command(OUTPUT G__${PROJECT_NAME}.cxx
-        COMMAND ${ROOTCLING} -v -f G__${PROJECT_NAME}.cxx
-        -rml lib${PROJECT_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}
-        -rmf lib${PROJECT_NAME}.rootmap
-        -s lib${PROJECT_NAME}
-        -I${CMAKE_CURRENT_SOURCE_DIR} -I${CMAKE_SOURCE_DIR}/src/base
-        ${HEADERS}
-        ${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}LinkDef.h
-        )
-add_library(${PROJECT_NAME} SHARED ${SOURCES} G__${PROJECT_NAME}.cxx)
+ROOT_GENERATE_DICTIONARY(G__${PROJECT_NAME} ${HEADERS} OPTIONS -I ${CMAKE_SOURCE_DIR}/src/base LINKDEF ${PROJECT_NAME}LinkDef.h)
+
+add_library(${PROJECT_NAME} SHARED ${SOURCES} G__${PROJECT_NAME})
 add_library(QnTools::Correction ALIAS ${PROJECT_NAME})
 set_property(TARGET ${PROJECT_NAME} PROPERTY EXPORT_NAME Correction)
 target_compile_definitions(${PROJECT_NAME} PUBLIC "-DUSE_ROOT")
