@@ -51,6 +51,30 @@ class OutputValue {
   Qn::InputVariable *var_; /// Variable to be written to the tree
 };
 
+template <typename T>
+class OutputValueVector {
+ public:
+  explicit OutputValueVector(Qn::InputVariable *var) : var_(var), value_(var_->size()) {}
+  /**
+ * @brief updates the value. To be called every event.
+ */
+  void UpdateValue() {
+    for (int i = 0; i < var_->size(); ++i) {
+      value_[i] = (T) (*var_->at(i));
+    }
+  }
+  /**
+   * @brief Creates a new branch in the tree.
+   * @param tree output tree
+   */
+  void SetToTree(TTree *tree) {
+    tree->Branch(var_->GetName().data(), &value_);
+  }
+ private:
+  Qn::InputVariable *var_;
+  std::vector<T> value_;
+};
+
 namespace Qn {
 /**
  * @brief Manages the input variables for the correction step.
@@ -152,14 +176,21 @@ class InputVariableManager {
    * @return a pointer to the values container.
    */
   f_type *GetVariableContainer() { return variable_values_float_; }
+
   /**
    * @brief Register the variable to be saved in the output tree as float.
    * Beware of conversion from double.
    * @param name Name of the variable.
    */
   void RegisterOutputF(const std::string &name) {
-    OutputValue<f_type> val(FindVariablePtr(name));
-    variable_output_float_.push_back(val);
+    auto ptr = FindVariablePtr(name);
+    if (ptr->size() > 1) {
+      OutputValueVector<f_type> val(FindVariablePtr(name));
+      variable_output_vector_float_.push_back(val);
+    } else {
+      OutputValue<f_type> val(FindVariablePtr(name));
+      variable_output_float_.push_back(val);
+    }
   }
 
   /**
@@ -168,8 +199,14 @@ class InputVariableManager {
    * @param name Name of the variable.
    */
   void RegisterOutputL(const std::string &name) {
-    OutputValue<i_type> val(FindVariablePtr(name));
-    variable_output_integer_.push_back(val);
+    auto ptr = FindVariablePtr(name);
+    if (ptr->size() > 1) {
+      OutputValueVector<i_type> val(FindVariablePtr(name));
+      variable_output_vector_int_.push_back(val);
+    } else {
+      OutputValue<i_type> val(FindVariablePtr(name));
+      variable_output_integer_.push_back(val);
+    }
   }
 
   /**
@@ -177,6 +214,8 @@ class InputVariableManager {
    * @param tree output tree to contain the event information
    */
   void SetOutputTree(TTree *tree) {
+    for (auto &element : variable_output_vector_float_) { element.SetToTree(tree); }
+    for (auto &element : variable_output_vector_int_) { element.SetToTree(tree); }
     for (auto &element : variable_output_float_) { element.SetToTree(tree); }
     for (auto &element : variable_output_integer_) { element.SetToTree(tree); }
   }
@@ -185,6 +224,8 @@ class InputVariableManager {
    * @brief Updates the output variables.
    */
   void UpdateOutVariables() {
+    for (auto &element : variable_output_vector_float_) { element.UpdateValue(); }
+    for (auto &element : variable_output_vector_int_) { element.UpdateValue(); }
     for (auto &element : variable_output_float_) { element.UpdateValue(); }
     for (auto &element : variable_output_integer_) { element.UpdateValue(); }
   }
@@ -195,6 +236,8 @@ class InputVariableManager {
   f_type *variable_values_ones_ = nullptr; //!<! values container of ones.
   std::vector<double *> channel_variables_; //!<!
   std::map<std::string, InputVariable> variable_map_; /// name to variable map
+  std::vector<OutputValueVector<f_type>> variable_output_vector_float_; //!<! variables registered for output as float
+  std::vector<OutputValueVector<i_type>> variable_output_vector_int_; //!<! variables registered for output as float
   std::vector<OutputValue<f_type>> variable_output_float_; //!<! variables registered for output as float
   std::vector<OutputValue<i_type>> variable_output_integer_; //!<! variables registered for output as long
   /// \cond CLASSIMP
