@@ -44,8 +44,7 @@ class CorrelationActionBase {
    * Constructor
    * @param name name of the correlation
    */
-  explicit CorrelationActionBase(std::string name)
-      : action_name_(std::move(name)) {}
+  explicit CorrelationActionBase(std::string_view name) : action_name_(name) {}
   /**
    * Returns the name of the output Q-vector.
    * @return name of the output Q-vector
@@ -98,6 +97,7 @@ class CorrelationAction<Function, std::tuple<InputDataContainers...>,
  private:
   constexpr static std::size_t NumberOfInputs = sizeof...(InputDataContainers);
   using DataContainerRef = std::reference_wrapper<const DataContainerQVector>;
+  using InitializationObject = std::vector<Qn::DataContainerQVector>;
 
  public:
   /**
@@ -111,7 +111,7 @@ class CorrelationAction<Function, std::tuple<InputDataContainers...>,
    * @param n_samples Number of samples used for the bootstrapping
    */
   CorrelationAction(
-      const std::string &correlation_name, Function function,
+      std::string_view correlation_name, Function function,
       const std::array<std::string, NumberOfInputs> &input_names,
       const std::array<Qn::Stats::Weights, NumberOfInputs> &weights,
       AxesConfig event_axes, unsigned int n_samples)
@@ -165,27 +165,14 @@ class CorrelationAction<Function, std::tuple<InputDataContainers...>,
   }
 
   /**
-   * Initializes the CorrelationAction using the input Q-vectors in the input
-   * TTree.
-   * @param reader The TTreeReader gives access to the input TTree.
+   * Initializes the CorrelationAction using the initialization object.
+   * @param object The TTreeReader gives access to the input TTree.
    */
-  void Initialize(TTreeReader &reader) {
-    using namespace std::literals::string_literals;
-    reader.Restart();
-    std::vector<TTreeReaderValue<DataContainerQVector>> input_data;
-    std::transform(
-        std::begin(input_names_), std::end(input_names_),
-        std::back_inserter(input_data), [&reader](const std::string &name) {
-          return TTreeReaderValue<DataContainerQVector>(reader, name.data());
-        });
-    reader.Next();
+  void Initialize(const InitializationObject &object) {
     correlation_.AddAxes(event_axes_.GetVector());
-    for (std::size_t i = 0; i < input_data.size(); ++i) {
-      auto &i_data = input_data[i];
-      if (i_data.GetSetupStatus() < 0)
-        throw std::runtime_error("Q-Vector branch "s + i_data.GetBranchName() +
-                                 " not found.");
-      if (!i_data->IsIntegrated()) AddAxes(input_data, i);
+    for (std::size_t i = 0; i < object.size(); ++i) {
+      const auto &i_data = object[i];
+      if (!i_data.IsIntegrated()) AddAxes(object, i);
     }
     stride_ = correlation_.size() / event_axes_.GetSize();
     for (auto &bin : correlation_) {
@@ -195,6 +182,40 @@ class CorrelationAction<Function, std::tuple<InputDataContainers...>,
       else
         bin.SetWeights(Qn::Stats::Weights::REFERENCE);
     }
+  }
+
+  /**
+   * Initializes the CorrelationAction using the input Q-vectors in the input
+   * TTree. Throws a runtime error, when a entry of the input_names is not found
+   * in the TTree.
+   * @param reader The TTreeReader gives access to the input TTree.
+   */
+  void Initialize(TTreeReader &reader) {
+    using namespace std::literals::string_literals;
+    reader.Restart();
+    std::vector<TTreeReaderValue<DataContainerQVector>> input_data;
+    // Get a vector of TTreeReaderValues.
+    std::transform(
+        std::begin(input_names_), std::end(input_names_),
+        std::back_inserter(input_data), [&reader](const std::string &name) {
+          return TTreeReaderValue<DataContainerQVector>(reader, name.data());
+        });
+    // Read in the first event in the TTree
+    reader.Next();
+    std::vector<Qn::DataContainerQVector> initialization_object;
+    // Move valid entries to the initialization Object
+    std::transform(std::begin(input_data), std::end(input_data),
+                   std::back_inserter(initialization_object),
+                   [](auto &reader_value) {
+                     if (reader_value.GetSetupStatus() < 0)
+                       throw std::runtime_error("Q-Vector branch "s +
+                                                reader_value.GetBranchName() +
+                                                " not found.");
+                     else
+                       return *reader_value;
+                   });
+    // Initialize
+    Initialize(initialization_object);
   }
 
   /**
@@ -318,19 +339,18 @@ class CorrelationAction<Function, std::tuple<InputDataContainers...>,
    * @param data_containers Datacontainers going into the correlation
    * @param i Current position of the data container.
    */
-  void AddAxes(
-      std::vector<TTreeReaderValue<DataContainerQVector>> &data_containers,
-      std::size_t i) {
-    for (auto axis : data_containers[i]->GetAxes()) {
+  void AddAxes(const std::vector<DataContainerQVector> &data_containers,
+               std::size_t i) {
+    for (auto axis : data_containers[i].GetAxes()) {
       std::string name = axis.Name();
       for (std::size_t j = 0; j < NumberOfInputs; ++j) {
         if (i == j) continue;
         auto &other = data_containers[j];
-        if (other->IsIntegrated()) continue;
-        for (const auto &other_axis : other->GetAxes()) {
+        if (other.IsIntegrated()) continue;
+        for (const auto &other_axis : other.GetAxes()) {
           if (axis != other_axis) continue;
-          auto this_name = std::string(data_containers[i].GetBranchName());
-          if (this_name == other.GetBranchName())
+          auto this_name = std::string(input_names_[i]);
+          if (this_name == input_names_[j])
             name = this_name + "_" + std::to_string(i) + "_" + axis.Name();
           else
             name = this_name + "_" + axis.Name();
@@ -356,8 +376,8 @@ class CorrelationAction<Function, std::tuple<InputDataContainers...>,
  * @return result of the correlation.
  */
 template <typename Function, typename AxesConfig>
-auto Correlation(
-    const std::string &correlation_name, Function function,
+auto MakeCorrelationAction(
+    std::string_view correlation_name, Function function,
     const std::array<std::string,
                      TemplateHelpers::FunctionTraits<Function>::Arity>
         input_names,

@@ -85,7 +85,7 @@ class ReSamples {
   template<typename SAMPLES>
   void Fill(const double value, const double weight, SAMPLES &&sample_multiplicities_) {
     using ArrayValueType = typename std::decay<decltype(std::declval<SAMPLES &>()[0])>::type;
-    for (std::size_t i = 0; i < sample_multiplicities_.size(); ++i) {
+    for (std::size_t i = 0; i < statistics_.size(); ++i) {
       for (ArrayValueType j = 0; j < sample_multiplicities_[i]; ++j) {
         statistics_[i].Fill(value, weight);
       }
