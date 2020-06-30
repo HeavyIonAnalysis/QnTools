@@ -26,4 +26,4 @@
 #include "CorrelationAction.hpp"
 #include "CorrelationFunctions.hpp"
 #include "ReSampleHelper.hpp"
-#endif//QNTOOLS_QNDATAFRAME_H_
+#endif  // QNTOOLS_QNDATAFRAME_H_

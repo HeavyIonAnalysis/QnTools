@@ -36,10 +36,8 @@ class ReSampleHelper {
    * @param df Dataframe to which the samples are added.
    * @param n number of samples which are to be used for error estimation
    */
-  explicit ReSampleHelper(std::size_t n = 100) : n_(n),
-                                                 generator_(std::random_device{}()),
-                                                 poisson_(1) {
-  }
+  explicit ReSampleHelper(std::size_t n = 100)
+      : n_(n), generator_(std::random_device{}()), poisson_(1) {}
 
   /**
    * Defines the tiems a single event enters in the different samples.
@@ -53,21 +51,24 @@ class ReSampleHelper {
   }
 
  private:
-  const std::size_t n_;                /// Number of samples
-  std::mt19937 generator_;             /// Random number generator
-  std::poisson_distribution<> poisson_;/// distribution of events per sample.
+  const std::size_t n_;                  /// Number of samples
+  std::mt19937 generator_;               /// Random number generator
+  std::poisson_distribution<> poisson_;  /// distribution of events per sample.
 };
 
 /**
  * Helper function to add the samples to the RDataFrame.
- * The Event loop is lazily executed as soon as the "samples" branch information is consumed by a correlation.
+ * The Event loop is lazily executed as soon as the "samples" branch information
+ * is consumed by a correlation.
  * @tparam DataFrame type of the RDataFrame.
  * @param df RDataFrame wrapping the input data.
  * @param n Number of samples.
  * @return The resulting RDataFrame with the sample definition.
  */
-template<typename DataFrame>
-auto Resample(DataFrame df, std::size_t n) { return df.template Define("samples", ReSampleHelper(n), {}); }
+template <typename DataFrame>
+auto Resample(DataFrame df, std::size_t n) {
+  return df.template Define("samples", ReSampleHelper(n), {});
+}
 
-}// namespace Qn::Correlation
-#endif//RESAMPLEHELPER_H_
+}  // namespace Qn::Correlation
+#endif  // RESAMPLEHELPER_H_

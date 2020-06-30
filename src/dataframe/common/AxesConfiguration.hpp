@@ -31,9 +31,9 @@ namespace Impl {
  * template class StrideCalculator
  * @tparam position recursion step
  */
-template<std::size_t position>
+template <std::size_t position>
 struct StrideCalculator {
-  template<typename Stride, typename Axes>
+  template <typename Stride, typename Axes>
   static Stride Calculate(Stride &stride, const Axes &axes) {
     stride[position] = stride[position + 1] * std::get<position>(axes).size();
     return StrideCalculator<position - 1>::Calculate(stride, axes);
@@ -43,54 +43,64 @@ struct StrideCalculator {
 /**
  * base template class StrideCalculator
  */
-template<>
+template <>
 struct StrideCalculator<0> {
-  template<typename Stride, typename Axes>
+  template <typename Stride, typename Axes>
   static Stride Calculate(Stride &stride, const Axes &axes) {
     stride[0] = stride[1] * std::get<0>(axes).size();
     return stride;
   }
 };
 
-}// namespace Impl
+}  // namespace Impl
 
 /**
- * Template class for the configuration of the event axes. Calculates the binning of a multidimensional
- * tensor in row-major using the specified binning. Does not store the bin data itself.
+ * Template class for the configuration of the event axes. Calculates the
+ * binning of a multidimensional tensor in row-major using the specified
+ * binning. Does not store the bin data itself.
  * @tparam Axes type and number of the axes.
  */
-template<typename... Axes>
+template <typename... Axes>
 class AxesConfiguration {
  public:
-  static constexpr auto kDimension = sizeof...(Axes);/// Dimensionality of the matrix
+  static constexpr auto kDimension =
+      sizeof...(Axes);  /// Dimensionality of the matrix
   using AxisTuple = typename std::tuple<Axes...>;
   using AxisType = typename std::tuple_element<0, std::tuple<Axes...>>::type;
-  using AxisValueTypeTuple = typename TemplateHelpers::TupleOf<sizeof...(Axes), typename AxisType::ValueType>;
+  using AxisValueTypeTuple =
+      typename TemplateHelpers::TupleOf<sizeof...(Axes),
+                                        typename AxisType::ValueType>;
 
   /**
    * Constructor
    * @param axes Axes going into the construction of the AxisConfiguration
-   * Calculates the stride of the axis configuration. The Axes and the stride are both const.
+   * Calculates the stride of the axis configuration. The Axes and the stride
+   * are both const.
    */
-  explicit AxesConfiguration(Axes... axes) : axes_(axes...), stride_(CalculateStride()) {}
+  explicit AxesConfiguration(Axes... axes)
+      : axes_(axes...), stride_(CalculateStride()) {}
 
   /**
-   * Returns the axes inform of a vector. Can be used to configure the RDataFrame during runtime.
+   * Returns the axes inform of a vector. Can be used to configure the
+   * RDataFrame during runtime.
    * @return vector of axes.
    */
-  std::vector<AxisType> GetVector() const { return TemplateHelpers::ToVector(axes_); }
+  std::vector<AxisType> GetVector() const {
+    return TemplateHelpers::ToVector(axes_);
+  }
 
   /**
    * Get the total size
    */
   [[nodiscard]] std::size_t GetSize() const { return stride_[0]; }
   /**
-   * Returns the linear bin offset for the axes configuration from passed coordinates.
+   * Returns the linear bin offset for the axes configuration from passed
+   * coordinates.
    * @tparam Coordinates type of the coordinates
    * @param coordinates coordinates for which the corresponding bin is searched.
    * @return linear index of the bin.
    */
-  template<typename... Coordinates>
+  template <typename... Coordinates>
   long GetLinearIndex(Coordinates &&... coordinates) const {
     return FindBin(std::forward<Coordinates>(coordinates)...);
   }
@@ -115,9 +125,9 @@ class AxesConfiguration {
   const std::tuple<Axes...> &GetAxes() const { return axes_; }
 
   /**
- * Returns the Tuple of axes. Used to optimize the binning.
- * @return the tuple of axes.
- */
+   * Returns the Tuple of axes. Used to optimize the binning.
+   * @return the tuple of axes.
+   */
   std::tuple<Axes...> &GetAxes() { return axes_; }
 
  private:
@@ -130,10 +140,12 @@ class AxesConfiguration {
    * @param rest rest of coordinates
    * @return bin
    */
-  template<typename FirstCoordinate, typename... Rest>
+  template <typename FirstCoordinate, typename... Rest>
   long FindBin(FirstCoordinate &&first_coordinate, Rest &&... rest) const {
     constexpr std::size_t position = kDimension - sizeof...(rest) - 1;
-    auto bin = stride_[position + 1] * std::get<position>(axes_).FindBin(std::forward<FirstCoordinate>(first_coordinate));
+    auto bin = stride_[position + 1] *
+               std::get<position>(axes_).FindBin(
+                   std::forward<FirstCoordinate>(first_coordinate));
     auto rest_bin = FindBin(std::forward<Rest>(rest)...);
     if (rest_bin < 0) return -1;
     return bin + rest_bin;
@@ -146,10 +158,12 @@ class AxesConfiguration {
    * @param first_coordinate first coordinate
    * @return bin
    */
-  template<typename FirstCoordinate>
+  template <typename FirstCoordinate>
   long FindBin(FirstCoordinate &&first_coordinate) const {
     constexpr std::size_t position = kDimension - 1;
-    return stride_[position + 1] * std::get<position>(axes_).FindBin(std::forward<FirstCoordinate>(first_coordinate));
+    return stride_[position + 1] *
+           std::get<position>(axes_).FindBin(
+               std::forward<FirstCoordinate>(first_coordinate));
   }
 
   /**
@@ -162,8 +176,9 @@ class AxesConfiguration {
     return Impl::StrideCalculator<kDimension - 1>::Calculate(temp, axes_);
   }
 
-  std::tuple<Axes...> axes_;                      /// tuple of event axes.
-  std::array<std::size_t, kDimension + 1> stride_;/// array of strides used for linear bin calculation.
+  std::tuple<Axes...> axes_;  /// tuple of event axes.
+  std::array<std::size_t, kDimension + 1>
+      stride_;  /// array of strides used for linear bin calculation.
 };
 
 /**
@@ -172,10 +187,10 @@ class AxesConfiguration {
  * @param axes Axes used for the construction of the configuration.
  * @return The configuration.
  */
-template<typename... Axes>
+template <typename... Axes>
 auto EventAxes(Axes... axes) {
   return AxesConfiguration<Axes...>(axes...);
 }
 
-}// namespace Qn
-#endif//QNTOOLS_AXESCONFIGURATION_H_
+}  // namespace Qn
+#endif  // QNTOOLS_AXESCONFIGURATION_H_
