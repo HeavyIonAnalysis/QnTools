@@ -16,8 +16,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <gtest/gtest.h>
+
 #include "RecenterAction.hpp"
 
-TEST(RecenterActionUnitTest, Constructor) {
- ASSERT_EQ(1,1);
-}
+TEST(RecenterActionUnitTest, Constructor) { ASSERT_EQ(1, 1); }
