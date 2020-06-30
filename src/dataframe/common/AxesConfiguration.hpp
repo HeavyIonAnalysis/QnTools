@@ -22,6 +22,7 @@
 #include <tuple>
 #include <vector>
 
+#include "Axis.hpp"
 #include "TemplateHelpers.hpp"
 
 namespace Qn {
@@ -67,9 +68,9 @@ class AxesConfiguration {
       sizeof...(Axes);  /// Dimensionality of the matrix
   using AxisTuple = typename std::tuple<Axes...>;
   using AxisType = typename std::tuple_element<0, std::tuple<Axes...>>::type;
+  using AxisValueType = typename AxisType::ValueType;
   using AxisValueTypeTuple =
-      typename TemplateHelpers::TupleOf<sizeof...(Axes),
-                                        typename AxisType::ValueType>;
+      typename TemplateHelpers::TupleOf<sizeof...(Axes), AxisValueType>;
 
   /**
    * Constructor
@@ -103,6 +104,31 @@ class AxesConfiguration {
   template <typename... Coordinates>
   long GetLinearIndex(Coordinates &&... coordinates) const {
     return FindBin(std::forward<Coordinates>(coordinates)...);
+  }
+
+  /**
+   * Returns a mapping between the linear index and the corresponding upper and
+   * lower bin edges.
+   * @return mapping between the linear index and the corresponding upper and
+   * lower bin edges
+   */
+  auto GetBinEdgesIndexMap() const {
+    using edgest =
+        typename Qn::TemplateHelpers::TupleOf<kDimension,
+                                              typename AxisType::ValueType>;
+    std::vector<std::pair<edgest, edgest>> index_map(GetSize());
+    for (int i = 0; i < GetSize(); ++i) {
+      AxisValueTypeTuple lower;
+      AxisValueTypeTuple higher;
+      auto ndimbins = GetNDimBins(i);
+      auto caller = [](auto &lower, auto &higher, auto axis, auto bin) {
+        lower = axis.GetLowerBinEdge(bin);
+        higher = axis.GetUpperBinEdge(bin);
+      };
+      Qn::TemplateHelpers::TupleForEach(caller, lower, higher, axes_, ndimbins);
+      index_map.at(i) = std::pair(lower, higher);
+    }
+    return index_map;
   }
 
   /**
@@ -167,6 +193,24 @@ class AxesConfiguration {
   }
 
   /**
+   * Calculates the n dimensional bin from a linear_index
+   * @param linear_index linear bin index
+   * @return tuple of length n with index of axis in each entry
+   */
+  auto GetNDimBins(int linear_index) const {
+    Qn::TemplateHelpers::TupleOf<kDimension, std::size_t> tuple;
+    int dimension = 1;
+    auto caller = [&](std::size_t &t) {
+      std::size_t index = linear_index / stride_[dimension];
+      linear_index = linear_index % stride_[dimension];
+      ++dimension;
+      t = index;
+    };
+    Qn::TemplateHelpers::TupleForEach(caller, tuple);
+    return tuple;
+  }
+
+  /**
    * Calculates the strides.
    * @return return the array of strides.
    */
@@ -188,7 +232,7 @@ class AxesConfiguration {
  * @return The configuration.
  */
 template <typename... Axes>
-auto EventAxes(Axes... axes) {
+auto MakeAxes(Axes... axes) {
   return AxesConfiguration<Axes...>(axes...);
 }
 

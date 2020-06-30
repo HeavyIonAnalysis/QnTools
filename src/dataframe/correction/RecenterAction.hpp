@@ -62,6 +62,7 @@ class RecenterAction;
 template <typename AxesConfig, typename... EventParameters>
 class RecenterAction<AxesConfig, std::tuple<EventParameters...>> {
  public:
+  using InitializationObject = Qn::DataContainerQVector;
   /**
    * Constructor
    * @param correction_name name of the correction step
@@ -69,11 +70,12 @@ class RecenterAction<AxesConfig, std::tuple<EventParameters...>> {
    * @param axes_configuration Qn::AxesConfiguration determining the sub samples
    * used for corrections.
    */
-  RecenterAction(std::string correction_name, AxesConfig axes_configuration,
-                 std::string base_q_name, std::string previous_correction_name)
-      : correction_name_(std::move(correction_name)),
-        previous_q_name_(std::move(previous_correction_name)),
-        base_q_name_(std::move(base_q_name)),
+  RecenterAction(std::string_view correction_name,
+                 AxesConfig axes_configuration, std::string_view base_q_name,
+                 std::string_view previous_correction_name)
+      : correction_name_(correction_name),
+        previous_q_name_(previous_correction_name),
+        base_q_name_(base_q_name),
         event_axes_(axes_configuration) {}
 
   /**
@@ -259,6 +261,28 @@ class RecenterAction<AxesConfig, std::tuple<EventParameters...>> {
   std::vector<Qn::DataContainerStatistic>
       y_;  /// y component correction histograms.
 
+  void Initialize(InitializationObject &obj) {
+    auto input_q = obj.At(0);
+    input_q.InitializeHarmonics();
+    int i_harmonic = 0;
+    int harmonic = input_q.GetFirstHarmonic();
+    Reset();
+    while (harmonic != -1) {
+      x_.emplace_back();
+      y_.emplace_back();
+      x_[i_harmonic].AddAxes(event_axes_.GetVector());
+      y_[i_harmonic].AddAxes(event_axes_.GetVector());
+      if (!obj.IsIntegrated()) {
+        x_[i_harmonic].AddAxes(obj.GetAxes());
+        y_[i_harmonic].AddAxes(obj.GetAxes());
+      }
+      harmonics_vector_.push_back(harmonic);
+      harmonic = input_q.GetNextHarmonic(harmonic);
+      ++i_harmonic;
+    }
+    stride_ = obj.size();
+  }
+
   /**
    * Initializes the correction step using the information inside the input
    * tree.
@@ -276,25 +300,7 @@ class RecenterAction<AxesConfig, std::tuple<EventParameters...>> {
           "The Q-Vector entry "s + input_data.GetBranchName() +
           " in the tree is not valid. Cannot setup the recentering");
     }
-    auto input_q = input_data->At(0);
-    input_q.InitializeHarmonics();
-    int i_harmonic = 0;
-    int harmonic = input_q.GetFirstHarmonic();
-    Reset();
-    while (harmonic != -1) {
-      x_.emplace_back();
-      y_.emplace_back();
-      x_[i_harmonic].AddAxes(event_axes_.GetVector());
-      y_[i_harmonic].AddAxes(event_axes_.GetVector());
-      if (!input_data->IsIntegrated()) {
-        x_[i_harmonic].AddAxes(input_data->GetAxes());
-        y_[i_harmonic].AddAxes(input_data->GetAxes());
-      }
-      harmonics_vector_.push_back(harmonic);
-      harmonic = input_q.GetNextHarmonic(harmonic);
-      ++i_harmonic;
-    }
-    stride_ = input_data->size();
+    Initialize(*input_data);
   }
 
   /**
@@ -367,7 +373,7 @@ class RecenterAction<AxesConfig, std::tuple<EventParameters...>> {
   }
 
   [[nodiscard]] std::string AddCorrectionStepToName(
-      std::string correction_step) const {
+      const std::string &correction_step) const {
     if (correction_step.empty())
       return base_q_name_;
     else
@@ -443,9 +449,10 @@ class RecenterAction<AxesConfig, std::tuple<EventParameters...>> {
  * @return RecenterAction
  */
 template <typename EventAxes>
-auto Recentering(const std::string &correction_name,
-                 EventAxes axes_configuration, const std::string &base_q_name,
-                 const std::string &previous_correction = "") {
+auto MakeRecenterAction(std::string_view correction_name,
+                        EventAxes axes_configuration,
+                        std::string_view base_q_name,
+                        std::string_view previous_correction = "") {
   return RecenterAction<EventAxes, typename EventAxes::AxisValueTypeTuple>{
       correction_name, axes_configuration, base_q_name, previous_correction};
 }

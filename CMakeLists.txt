@@ -37,7 +37,7 @@ if (CMAKE_BUILD_TYPE MATCHES "^[Rr]elease")
 endif (CMAKE_BUILD_TYPE MATCHES "^[Rr]elease")
 
 # ROOT
-find_package(ROOT REQUIRED COMPONENTS Core MathCore MathMore RIO Hist Tree Net TreePlayer)
+find_package(ROOT REQUIRED COMPONENTS Core MathCore MathMore RIO Hist Tree Net TreePlayer ROOTVecOps)
 include(${ROOT_USE_FILE})
 message(STATUS "Using ROOT: ${ROOT_VERSION} <${ROOT_CONFIG}>")
 set(ROOTCLING ${ROOT_BINDIR}/rootcling)

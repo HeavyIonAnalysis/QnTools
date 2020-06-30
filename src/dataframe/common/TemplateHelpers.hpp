@@ -21,6 +21,8 @@
 #include <tuple>
 #include <utility>
 
+#include <ROOT/RResultPtr.hxx>
+
 namespace Qn::TemplateHelpers {
 
 namespace Impl {
@@ -42,6 +44,37 @@ template <typename Function, typename Tuple>
 auto Call(Function f, Tuple t) {
   static constexpr auto size = std::tuple_size<Tuple>::value;
   return Impl::Call(f, t, std::make_index_sequence<size>{});
+}
+
+namespace Impl {
+template <std::size_t Index, typename Function, typename... Tuples>
+constexpr void invoke_at(Function &&func, Tuples &&... tuples) {
+  func(std::get<Index>(std::forward<Tuples>(tuples))...);
+}
+
+template <std::size_t... Indices, typename Function, typename... Tuples>
+constexpr void apply_sequence(Function &&func, std::index_sequence<Indices...>,
+                              Tuples &&... tuples) {
+  (((void)invoke_at<Indices>(std::forward<Function>(func),
+                             std::forward<Tuples>(tuples)...),
+    ...));
+}
+}  // namespace Impl
+
+template <typename Function, typename... Tuples>
+constexpr void TupleForEach(Function &&func, Tuples &&... tuples) {
+  static_assert(sizeof...(tuples) > 0,
+                "Must be called with at least one tuple argument");
+
+  constexpr auto min_length =
+      std::min({std::tuple_size_v<std::remove_reference_t<Tuples>>...});
+  if constexpr (min_length != 0) {
+    Impl::apply_sequence(std::forward<Function>(func),
+                         std::make_index_sequence<min_length>{},
+                         std::forward<Tuples>(tuples)...);
+  } else {
+    func();
+  }
 }
 
 namespace Impl {

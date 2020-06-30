@@ -17,6 +17,7 @@
 #ifndef QNTOOLS_AVERAGEHELPER_H_
 #define QNTOOLS_AVERAGEHELPER_H_
 
+#include <exception>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -42,14 +43,16 @@ template <typename Action>
 class AverageHelper : public RActionImpl<AverageHelper<Action>> {
  public:
   using Result_t = Action;  /// Result of the averaging operation.
+  using InitializationObject = typename Action::InitializationObject;
 
  private:
   std::vector<bool> is_configured_;  /// flag for tracking if the helper has
                                      /// been configured using the input data.
   std::vector<std::shared_ptr<Action>> results_;  /// vector of results.
   TTreeReader *external_reader_ =
-      nullptr;  /// non-owning pointer to external TTreeReader needed in case of
-                /// cached dataframe.
+      nullptr;  /// non-owning pointer to external TTreeReader.
+  InitializationObject *initialization_object_ =
+      nullptr;  /// non-owning pointer to the Action::InitializationObject.
 
  public:
   /**
@@ -69,10 +72,36 @@ class AverageHelper : public RActionImpl<AverageHelper<Action>> {
   }
 
   /**
-   * Set External TTreeReader
+   * In case the input variables have been defined in cache, the Action needs a
+   * reference to be initialized. This uses the TTreeReader, in which the
+   * necessary input is inside with the same name. Do not call this together
+   * with SetInitializationWithInitializationObject.
+   * @param reader the TTreeReader in which the necessary objects for
+   * initialization are contained.
+   * @return the AverageHelper for convenience.
    */
-  auto SetExternalTTreeReader(TTreeReader *reader) {
+  auto SetInitializationWithExternalTTreeReader(TTreeReader *reader) {
+    if (initialization_object_)
+      throw std::runtime_error(
+          "Error! SetInitializationWithInitializationObject has already been "
+          "called.");
     external_reader_ = reader;
+    return *this;
+  }
+
+  /**
+   * In case the input variables have been defined in cache, the Action needs a
+   * reference to be initialized. This uses the Action::InitializationObject. Do
+   * not call this together with SetInitializationWithExternalTTreeReader.
+   * @param object initialization object defined in the Action
+   * @return the AverageHelper for convenience.
+   */
+  auto SetInitializationWithInitializationObject(InitializationObject *object) {
+    if (external_reader_)
+      throw std::runtime_error(
+          "Error! SetInitializationWithExternalTTreeReader has already been "
+          "called.");
+    initialization_object_ = object;
     return *this;
   }
 
@@ -131,9 +160,20 @@ class AverageHelper : public RActionImpl<AverageHelper<Action>> {
       if (reader) {
         TTreeReader local_reader(reader->GetTree());
         results_[slot]->Initialize(local_reader);
-      } else {
+      } else if (external_reader_) {
         TTreeReader local_reader(external_reader_->GetTree());
         results_[slot]->Initialize(local_reader);
+      } else if (initialization_object_) {
+        results_[slot]->Initialize(*initialization_object_);
+      } else {
+        throw std::runtime_error(
+            "The Action has not Initialized. In case of cached data input, "
+            "either the "
+            "SetExternalTTreeReader(TTreeReader*), "
+            "or the "
+            "SetInitializationWithInitializationObject(Action::"
+            "InitializationObject*) function of the "
+            "AverageHelper needs to be used");
       }
       is_configured_[slot] = true;
     }
@@ -163,7 +203,7 @@ class AverageHelper : public RActionImpl<AverageHelper<Action>> {
    * @return Name of the action
    */
   std::string GetActionName() const { return results_[0]->GetName(); }
-};
+};  // namespace Qn
 
 /**
  * Helper function which creates the AverageHelper without needing to specify
@@ -172,7 +212,7 @@ class AverageHelper : public RActionImpl<AverageHelper<Action>> {
  * template parameters and create the AverageHelper.
  */
 template <typename Action>
-auto inline EventAverage(Action action) {
+auto inline MakeAverageHelper(Action action) {
   return AverageHelper<Action>{action};
 }
 

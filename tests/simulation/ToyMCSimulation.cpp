@@ -239,19 +239,15 @@ auto dfs = Qn::Correlation::Resample(df, n_samples);
 auto detector_names_trk = CreateDetectorNames(detectors_trk.size(), "DetTrk", correction_steps);
 
 constexpr auto kObs = Qn::Stats::Weights::OBSERVABLE;
-auto event_axes = Qn::EventAxes(event);
+auto event_axes = Qn::MakeAxes(event);
 
 std::map<std::string, ROOT::RDF::RResultPtr<Qn::Correlation::CorrelationActionBase>> correlations;
 for (const auto &detector : detector_names_trk) {
 std::array<std::string, 1> inputs{detector};
 std::string correlation_name{"v22"};
-auto c22 = Qn::EventAverage(Qn::Correlation::Correlation(
-    correlation_name + detector,
-    Qn::Correlation::TwoParticle::Cumulant(2),
-    inputs,
-    {kObs},
-    event_axes,
-    n_samples))
+auto c22 = Qn::MakeAverageHelper(Qn::Correlation::MakeCorrelationAction(correlation_name + detector,
+                                                                        Qn::Correlation::TwoParticle::Cumulant(2),
+                                                                        inputs, {kObs}, event_axes, n_samples))
     .BookMe(dfs);
 correlations.emplace(detector + "_" + correlation_name, c22);
 }
