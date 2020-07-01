@@ -3,9 +3,10 @@ find_dependency(ROOT COMPONENTS Core MathCore RIO Hist Tree Net TreePlayer)
 include("${CMAKE_CURRENT_LIST_DIR}/QnToolsTargets.cmake")
 
 get_filename_component(_thisdir "${CMAKE_CURRENT_LIST_FILE}" PATH)
-set(QnTools_INCLUDE_DIR ${_thisdir}/../../../include/QnTools)
+set(QnTools_INCLUDE_DIR ${_thisdir}/../../../include)
 set(QnTools_LIBS_DIR ${_thisdir}/../../../lib)
 
 if (QnTools_FOUND)
     message("QnTools was found.")
 endif (QnTools_FOUND)
+
