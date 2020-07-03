@@ -311,7 +311,7 @@ class CorrelationAction<Function, std::tuple<InputDataContainers...>,
       const ROOT::RVec<ULong64_t> &sample_ids, std::size_t step) {
     if (step + 1 == NumberOfInputs) {  /// base case
       for (const auto &bin : input_array[step].get()) {
-        if (bin.sumweights() < 1.) {
+        if (bin.n() < 1.) {
           ++out_bin;
           continue;
         }
@@ -322,7 +322,7 @@ class CorrelationAction<Function, std::tuple<InputDataContainers...>,
       }
     } else {  /// recursion
       for (const auto &bin : input_array[step].get()) {
-        if (bin.sumweights() < 1.) {
+        if (bin.n() < 1.) {
           ++out_bin;
           continue;
         }
