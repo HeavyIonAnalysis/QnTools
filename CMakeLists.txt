@@ -80,7 +80,9 @@ set(CMAKE_INSTALL_LIBDIR ${CMAKE_INSTALL_PREFIX}/lib)
 set(CMAKE_INSTALL_INCLUDEDIR ${CMAKE_INSTALL_PREFIX}/include/QnTools)
 
 FILE(GLOB_RECURSE headers "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp")
+FILE(GLOB_RECURSE headers_include "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp")
 install(FILES ${headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(FILES ${headers_include} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 # Installation of ROOT dictionaries
 install(FILES ${CMAKE_BINARY_DIR}/src/base/libQnToolsBase_rdict.pcm DESTINATION ${CMAKE_INSTALL_LIBDIR})
