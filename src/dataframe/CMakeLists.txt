@@ -13,7 +13,6 @@ set(dataframe_headers common/AverageHelper.hpp
         correlation/ReSampleHelper.hpp)
 
 list(APPEND DataFrameIncludePath
-        "${ROOT_INCLUDE_DIRS}"
         "${CMAKE_CURRENT_SOURCE_DIR}"
         "${CMAKE_CURRENT_SOURCE_DIR}/common"
         "${CMAKE_CURRENT_SOURCE_DIR}/correction"
@@ -23,7 +22,7 @@ target_include_directories(${PROJECT_NAME}
         $<INSTALL_INTERFACE:include/QnTools>
         "$<BUILD_INTERFACE:${DataFrameIncludePath}>"
         )
-target_link_libraries(${PROJECT_NAME} INTERFACE QnTools::Base ${ROOT_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} INTERFACE QnTools::Base ROOT::ROOTDataFrame ROOT::ROOTVecOps)
 add_library(QnTools::DataFrame ALIAS ${PROJECT_NAME})
 set_property(TARGET ${PROJECT_NAME} PROPERTY EXPORT_NAME DataFrame)
 

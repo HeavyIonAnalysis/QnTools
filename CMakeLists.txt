@@ -37,10 +37,8 @@ if (CMAKE_BUILD_TYPE MATCHES "^[Rr]elease")
 endif (CMAKE_BUILD_TYPE MATCHES "^[Rr]elease")
 
 # ROOT
-find_package(ROOT REQUIRED COMPONENTS Core MathCore MathMore RIO Hist Tree Net TreePlayer ROOTVecOps)
-include(${ROOT_USE_FILE})
+find_package(ROOT 6.20 CONFIG REQUIRED)
 message(STATUS "Using ROOT: ${ROOT_VERSION} <${ROOT_CONFIG}>")
-set(ROOTCLING ${ROOT_BINDIR}/rootcling)
 
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
     include(GoogleTest)
@@ -80,7 +78,9 @@ set(CMAKE_INSTALL_LIBDIR ${CMAKE_INSTALL_PREFIX}/lib)
 set(CMAKE_INSTALL_INCLUDEDIR ${CMAKE_INSTALL_PREFIX}/include/QnTools)
 
 FILE(GLOB_RECURSE headers "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp")
+FILE(GLOB_RECURSE headers_include "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp")
 install(FILES ${headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(FILES ${headers_include} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 # Installation of ROOT dictionaries
 install(FILES ${CMAKE_BINARY_DIR}/src/base/libQnToolsBase_rdict.pcm DESTINATION ${CMAKE_INSTALL_LIBDIR})
