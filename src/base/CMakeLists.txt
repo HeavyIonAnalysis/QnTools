@@ -21,7 +21,8 @@ target_link_libraries(${PROJECT_NAME} PUBLIC ${ROOT_LIBRARIES})
 
 # link to the gtest library if test are enabled
 IF (CMAKE_BUILD_TYPE MATCHES Debug)
-    list(APPEND SOURCES QVector.test.cpp)
+    list(APPEND SOURCES QVector.test.cpp
+                        DataContainer.test.cpp)
     add_executable(${PROJECT_NAME}UnitTests ${SOURCES})
     target_link_libraries(${PROJECT_NAME}UnitTests PRIVATE gtest_main PUBLIC ${PROJECT_NAME})
     gtest_add_tests(TARGET ${PROJECT_NAME}UnitTests)

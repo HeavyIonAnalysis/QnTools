@@ -1,4 +1,4 @@
-// Qn Tools
+  // Qn Tools
 //
 // Copyright (C) 2020  Lukas Kreis Ilya Selyuzhenkov
 // Contact: l.kreis@gsi.de; ilya.selyuzhenkov@gmail.com
@@ -23,33 +23,48 @@ using STAT = Qn::Stats::State;
 Stats MergeBins(const Stats &lhs, const Stats &rhs) {
   if (!rhs.mergeable_) throw std::logic_error("Cannot merge Stats. Please check prior operations.");
   Stats result;
+  result.bits_ = rhs.bits_;
+  result.weights_flag = rhs.weights_flag;
+  result.mergeable_ = rhs.mergeable_;
   if ((rhs.state_ == STAT::MEAN_ERROR)) {
     auto temp_l = lhs;
     auto temp_r = rhs;
+    temp_l.bits_ = rhs.bits_;
     double totalweight = 0.;
     if (lhs.weight_ == 0) {
       totalweight = temp_r.weight_;
     } else {
       totalweight = temp_l.weight_ + temp_r.weight_;
     }
-    result.mean_ = (temp_l.weight_ * temp_l.mean_ + temp_r.weight_ * temp_r.mean_) / totalweight;
-    auto error_1 = temp_l.weight_ / totalweight * temp_l.error_;
-    auto error_2 = temp_r.weight_ / totalweight * temp_r.error_;
-    result.error_ = std::sqrt(error_1 * error_1 + error_2 * error_2);
-    result.weight_ = totalweight;
+    if (totalweight > 0) {
+      result.mean_ =
+          (temp_l.weight_ * temp_l.mean_ + temp_r.weight_ * temp_r.mean_) /
+          totalweight;
+      double error_1 = 0.;
+      if (temp_l.MeanError() > 0.) {
+        error_1 = temp_l.weight_ / totalweight * temp_l.MeanError();
+      }
+      double error_2 = 0.;
+      if (temp_r.MeanError() > 0.) {
+        error_2 = temp_r.weight_ / totalweight * temp_r.MeanError();
+      }
+      result.error_ = std::sqrt(error_1 * error_1 + error_2 * error_2);
+      result.weight_ = totalweight;
+    } else {
+      result.mean_ = 0.;
+      result.error_ = 0.;
+      result.weight_ = 0.;
+    }
     bool merge_weights = (rhs.weights_flag == Qn::Stats::Weights::OBSERVABLE);
-    result.resamples_ = ReSamples::Merge(temp_l.resamples_, temp_r.resamples_, merge_weights);
+    if (rhs.TestBit(Qn::Stats::CORRELATEDERRORS) && lhs.TestBit(Qn::Stats::CORRELATEDERRORS)) {
+      result.resamples_ =
+          ReSamples::Merge(temp_l.resamples_, temp_r.resamples_, merge_weights);
+    }
     result.state_ = STAT::MEAN_ERROR;
-    result.bits_ = rhs.bits_;
-    result.weights_flag = rhs.weights_flag;
-    result.mergeable_ = rhs.mergeable_;
   } else {
     result.statistic_ = Qn::Merge(lhs.statistic_, rhs.statistic_);
     result.resamples_ = ReSamples::MergeStatistics(lhs.resamples_, rhs.resamples_);
     result.state_ = STAT::MOMENTS;
-    result.bits_ = rhs.bits_;
-    result.weights_flag = rhs.weights_flag;
-    result.mergeable_ = rhs.mergeable_;
   }
   return result;
 }
