@@ -34,7 +34,7 @@
  *       x_1^{ev_1} = 0, y_1^{ev_1} = 0
  *
  */
-TEST(QVectorAction, BasicIntegrated) {
+TEST(QVectorHelper, BasicIntegrated) {
   auto q_action = Qn::MakeQVectorHelper("test", {1, 2, 3, 4});
   int si = 4;
   ROOT::RVec<double> phis(si);
@@ -67,7 +67,7 @@ TEST(QVectorAction, BasicIntegrated) {
  *       x_1^{ev_2} = 0, y_1^{ev_2} = -sqrt(2)
  *
  */
-TEST(QVectorAction, Basic1D) {
+TEST(QVectorHelper, Basic1D) {
   auto axes = Qn::MakeAxes(Qn::AxisD("t1", 2, 0, 100));
   Qn::QVectorHelper<decltype(axes), std::tuple<ROOT::RVec<double>>> q_action(
       "test", {1, 2, 3, 4}, axes);
@@ -108,7 +108,7 @@ TEST(QVectorAction, Basic1D) {
  *       x_1^{ev_2} = 0, y_1^{ev_2} = -sqrt(2)
  *
  */
-TEST(QVectorAction, Basic2D) {
+TEST(QVectorHelper, Basic2D) {
   auto axes = Qn::MakeAxes(Qn::AxisD("eta", 2, 2, 4), Qn::AxisD("pt", 2, 0, 2));
   auto q_action = Qn::MakeQVectorHelper("test", {1, 2, 3, 4}, axes);
   int si = 8;
@@ -162,7 +162,7 @@ TEST(QVectorAction, Basic2D) {
  *       x_1^{ev_2} = 0, y_1^{ev_2} = -sqrt(2)
  *       All events in the DataFrame should give the same result.
  */
-TEST(QVectorAction, RDataFrame) {
+TEST(QVectorHelper, RDataFrame) {
   ROOT::RDataFrame df(8);
   std::size_t phi_size = 4;
   auto df1 = df.Define("phis",

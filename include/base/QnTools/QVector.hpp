@@ -102,6 +102,15 @@ class QVector {
     MAGNITUDE///< \f$ \mbox{Q'} = \frac{\mbox{Q}}{|\mbox{Q}|} \f$
   };
 
+  static std::string GetNormalizationName(Normalization normal) {
+    switch (normal){
+      case Normalization::NONE: return "None";
+      case Normalization::M: return "M";
+      case Normalization::SQRT_M: return "SqrtM";
+      case Normalization::MAGNITUDE: return "Magnitude";
+    }
+  }
+
   QVector() = default;
 
   virtual ~QVector() = default;

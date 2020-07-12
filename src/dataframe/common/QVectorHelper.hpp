@@ -105,6 +105,8 @@ class QVectorHelper<AxesConfig, std::tuple<DetectorParameters...>> {
     return ret;
   }
 
+  Qn::DataContainerQVector* GetPrototype() {return &q_vector_;}
+
  private:
   std::string name_;
   AxesConfig axes_;

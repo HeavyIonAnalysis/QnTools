@@ -59,7 +59,7 @@ class OutputValueVector {
  * @brief updates the value. To be called every event.
  */
   void UpdateValue() {
-    for (int i = 0; i < var_->size(); ++i) {
+    for (unsigned int i = 0; i < var_->size(); ++i) {
       value_[i] = (T) (*var_->at(i));
     }
   }

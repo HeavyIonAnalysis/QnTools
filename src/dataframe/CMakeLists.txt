@@ -32,6 +32,7 @@ IF (CMAKE_BUILD_TYPE MATCHES Debug)
             common/AverageHelper.test.cpp
             common/AxesConfiguration.test.cpp
             common/QVectorHelper.test.cpp
+            common/QVectorNormalizationHelper.test.cpp
             correction/RecenterAction.test.cpp
             correlation/CorrelationAction.test.cpp
             )
