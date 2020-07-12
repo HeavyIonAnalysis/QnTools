@@ -157,14 +157,14 @@ class AverageHelper : public RActionImpl<AverageHelper<Action>> {
    */
   void InitTask(TTreeReader *reader, unsigned int slot) {
     if (!is_configured_[slot]) {
-      if (reader) {
-        TTreeReader local_reader(reader->GetTree());
-        results_[slot]->Initialize(local_reader);
+      if (initialization_object_) {
+        results_[slot]->Initialize(*initialization_object_);
       } else if (external_reader_) {
         TTreeReader local_reader(external_reader_->GetTree());
         results_[slot]->Initialize(local_reader);
-      } else if (initialization_object_) {
-        results_[slot]->Initialize(*initialization_object_);
+      } else if (reader) {
+        TTreeReader local_reader(reader->GetTree());
+        results_[slot]->Initialize(local_reader);
       } else {
         throw std::runtime_error(
             "The Action has not Initialized. In case of cached data input, "

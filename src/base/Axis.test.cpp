@@ -1,4 +1,4 @@
-// Qn Tools
+// Flow Vector Correction Framework
 //
 // Copyright (C) 2020  Lukas Kreis Ilya Selyuzhenkov
 // Contact: l.kreis@gsi.de; ilya.selyuzhenkov@gmail.com
@@ -14,18 +14,13 @@
 // GNU General Public License for more details.
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#ifndef QNTOOLS_QNDATAFRAME_H_
-#define QNTOOLS_QNDATAFRAME_H_
-// common headers
-#include "AverageHelper.hpp"
-#include "AxesConfiguration.hpp"
-#include "EqualBinningHelper.hpp"
-#include "QVectorHelper.hpp"
-#include "QVectorNormalizationHelper.hpp"
-// correction step
-#include "RecenterAction.hpp"
-// correlation step
-#include "CorrelationAction.hpp"
-#include "CorrelationFunctions.hpp"
-#include "ReSampleHelper.hpp"
-#endif  // QNTOOLS_QNDATAFRAME_H_
+
+#include <gtest/gtest.h>
+
+#include "Axis.hpp"
+
+TEST(AxisUnitTest, Comparison) {
+  Qn::AxisD axis1("axis1",10.,0.,10.);
+  Qn::AxisD axis2("axis1",10.,0.,10.);
+  EXPECT_TRUE(axis1==axis2);
+}

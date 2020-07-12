@@ -24,6 +24,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <cmath>
 
 #include "Rtypes.h"
 
@@ -73,7 +74,10 @@ class Axis {
                      std::end(bin_edges_),
                      std::begin(axis.bin_edges_),
                      std::back_inserter(result),
-                     [](const T &a, const T &b) { return a == b; });
+                     [](const T &a, const T &b) {
+                       double epsilon = std::fabs(a*1e-3);
+                       return std::fabs(a-b) < epsilon;
+                     });
       same_bins = std::all_of(std::begin(result), std::end(result), [](bool a) { return a; });
     }
     return name_ == axis.name_ && same_bins;
