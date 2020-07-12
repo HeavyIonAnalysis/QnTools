@@ -48,8 +48,12 @@ set(HEADERS
         InputVariable.hpp
         QAHistogram.hpp
         )
+set(HEADERSQNTOOLS ${HEADERS})
+list(TRANSFORM HEADERSQNTOOLS PREPEND QnTools/)
 
-ROOT_GENERATE_DICTIONARY(G__${PROJECT_NAME} ${HEADERS} OPTIONS -I ${CMAKE_SOURCE_DIR}/src/base LINKDEF ${PROJECT_NAME}LinkDef.h)
+include_directories(${CMAKE_SOURCE_DIR}/include/correction)
+ROOT_GENERATE_DICTIONARY(G__${PROJECT_NAME} ${HEADERSQNTOOLS} LINKDEF ${PROJECT_NAME}LinkDef.h
+        OPTIONS -I ${CMAKE_SOURCE_DIR}/include/base/QnTools)
 
 add_library(${PROJECT_NAME} SHARED ${SOURCES} G__${PROJECT_NAME})
 add_library(QnTools::Correction ALIAS ${PROJECT_NAME})
@@ -57,14 +61,12 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY EXPORT_NAME Correction)
 target_compile_definitions(${PROJECT_NAME} PUBLIC "-DUSE_ROOT")
 target_include_directories(${PROJECT_NAME}
         PRIVATE
-        ${ROOT_INCLUDE_DIRS}
-        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/include/correction/QnTools
         PUBLIC
         $<INSTALL_INTERFACE:include/QnTools>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include/correction/QnTools>
         )
-target_link_libraries(${PROJECT_NAME} PUBLIC QnTools::Base PRIVATE ${ROOT_LIBRARIES})
-
+target_link_libraries(${PROJECT_NAME} PUBLIC QnTools::Base ROOT::Core ROOT::Hist)
 # link to the gtest library if test are enabled
 IF (CMAKE_BUILD_TYPE MATCHES Debug)
     list(APPEND SOURCES )
