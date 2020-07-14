@@ -22,7 +22,7 @@ target_include_directories(${PROJECT_NAME}
         $<INSTALL_INTERFACE:include/QnTools>
         "$<BUILD_INTERFACE:${DataFrameIncludePath}>"
         )
-target_link_libraries(${PROJECT_NAME} INTERFACE QnTools::Base ROOT::ROOTDataFrame ROOT::ROOTVecOps)
+target_link_libraries(${PROJECT_NAME} INTERFACE QnTools::Base ROOT::ROOTDataFrame)
 add_library(QnTools::DataFrame ALIAS ${PROJECT_NAME})
 set_property(TARGET ${PROJECT_NAME} PROPERTY EXPORT_NAME DataFrame)
 
@@ -37,6 +37,6 @@ IF (CMAKE_BUILD_TYPE MATCHES Debug)
             correlation/CorrelationAction.test.cpp
             )
     add_executable(${PROJECT_NAME}UnitTests ${SOURCES})
-    target_link_libraries(${PROJECT_NAME}UnitTests PRIVATE ${ROOT_LIBRARIES} gtest_main ${PROJECT_NAME})
+    target_link_libraries(${PROJECT_NAME}UnitTests PRIVATE QnTools::Base gtest_main ${PROJECT_NAME})
     gtest_add_tests(TARGET ${PROJECT_NAME}UnitTests)
 ENDIF (CMAKE_BUILD_TYPE MATCHES Debug)

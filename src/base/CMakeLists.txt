@@ -19,13 +19,13 @@ target_include_directories(${PROJECT_NAME}
         $<INSTALL_INTERFACE:include/QnTools>
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include/base/QnTools>
         )
-target_link_libraries(${PROJECT_NAME} PUBLIC ROOT::Core ROOT::Gpad)
+target_link_libraries(${PROJECT_NAME} PRIVATE ROOT::Core ROOT::Gpad)
 
 # link to the gtest library if test are enabled
 IF (CMAKE_BUILD_TYPE MATCHES Debug)
     list(APPEND SOURCES QVector.test.cpp
                         DataContainer.test.cpp)
     add_executable(${PROJECT_NAME}UnitTests ${SOURCES})
-    target_link_libraries(${PROJECT_NAME}UnitTests PRIVATE gtest_main PUBLIC ${PROJECT_NAME})
+    target_link_libraries(${PROJECT_NAME}UnitTests PRIVATE gtest_main ${PROJECT_NAME} ROOT::Core ROOT::Gpad ROOT::Hist)
     gtest_add_tests(TARGET ${PROJECT_NAME}UnitTests)
 ENDIF(CMAKE_BUILD_TYPE MATCHES Debug)
