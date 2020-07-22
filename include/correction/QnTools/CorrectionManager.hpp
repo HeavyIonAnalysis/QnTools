@@ -109,25 +109,42 @@ class CorrectionManager {
    * @param phi_name Name of the variable which saves the angular information e.g. phi angle of a channel or particle
    * @param weight_name Name of the variable which saves a weight. "Ones" is used for a weight of 1.
    * @param axes Axes used for differential corrections. Names correspond to the name of variables.
-   * @param harmo activated harmonics in a ordered initializer list e.g. `{1, 2, 4}`.
+   * @param harmonics activated harmonics in a bitset.
    */
-  template<std::size_t N>
   void AddDetector(std::string name,
                    Qn::DetectorType type,
                    const std::string &phi_name,
                    const std::string &weight_name,
                    const std::vector<Qn::AxisD> &axes,
-                   int const(&harmo)[N],
+                   const std::bitset<Qn::QVector::kmaxharmonics> &harmonics,
                    QVector::Normalization norm = QVector::Normalization::M,
                    const std::string &radial_offset_name = "Ones") {
-    std::bitset<Qn::QVector::kmaxharmonics> harmonics;
-    for (std::size_t i = 0; i < N; ++i) {
-      harmonics.set(harmo[i] - 1);
-    }
     auto phi = variable_manager_.FindVariable(phi_name);
     auto weight = variable_manager_.FindVariable(weight_name);
     auto radial_offset = variable_manager_.FindVariable(radial_offset_name);
     detectors_.AddDetector(name, type, phi, weight, radial_offset, axes, harmonics, norm);
+  }
+
+  /**
+   * @brief Add a detector to the correction framework. Old signature with
+   * static polymorphism
+   */
+  template <size_t N>
+  void AddDetector(std::string name,
+                   Qn::DetectorType type,
+                   const std::string &phi_name,
+                   const std::string &weight_name,
+                   const std::vector<Qn::AxisD> &axes,
+                   int const(&harmonics_array)[N],
+                   QVector::Normalization norm = QVector::Normalization::M,
+                   const std::string &radial_offset_name = "Ones"
+                   ) {
+    std::bitset<Qn::QVector::kmaxharmonics> harmonics_bitset;
+    for (size_t i = 0; i < N; ++i) {
+      harmonics_bitset[harmonics_array[i] - 1] = true;
+    }
+    AddDetector(name, type, phi_name, weight_name, axes, harmonics_bitset, norm, radial_offset_name);
+    return;
   }
 
   template<std::size_t N, typename FUNCTION>
