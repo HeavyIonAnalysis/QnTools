@@ -43,9 +43,9 @@ struct ICut {
  * @tparam T Type of variable
  */
 template<typename VAR, typename... T>
-class Cut : public ICut {
+class StaticCut : public ICut {
  public:
-  Cut(VAR (&arr)[sizeof...(T)], std::function<bool(T...)> lambda, std::string name)
+  StaticCut(VAR (&arr)[sizeof...(T)], std::function<bool(T...)> lambda, std::string name)
       : lambda_(lambda), name_(std::move(name)) {
     int i = 0;
     for (auto &a : arr) {
@@ -77,13 +77,23 @@ class Cut : public ICut {
 };
 
 namespace Details {
+
+template <typename Function, typename ... Arg>
+constexpr bool is_static_cut_v = std::is_same_v<bool, std::invoke_result_t<Function, Arg...>>;
+
+template <typename Function, typename T>
+constexpr bool is_dynamic_cut_v = std::is_same_v<bool, std::invoke_result<Function, const std::vector<std::decay_t<T>>&>>;
+
+template <typename Variable>
+using input_variable_t = std::remove_pointer_t<decltype(std::declval<const Variable>().Get())>;
+
 template<typename T, std::size_t>
-using CutDataType = T &;
-template<typename T, typename VAR, std::size_t N, typename FUNC, std::size_t... Is>
-std::unique_ptr<Cut<VAR, CutDataType<T, Is>...>> MakeUniqueCutImpl(std::index_sequence<Is...>,
-                                                                   VAR (&arr)[N],
-                                                                   FUNC &&func, std::string name) {
-  return std::make_unique<Cut<VAR, CutDataType<T, Is>...>>(arr, std::forward<FUNC>(func), name);
+using EnumeratedCutArg = T &;
+
+template<typename Variable, std::size_t N, typename Function, std::size_t... Is>
+typename std::enable_if_t<is_static_cut_v<Function, EnumeratedCutArg<input_variable_t<Variable>, Is>...>,std::unique_ptr<ICut>>
+MakeUniqueCutImpl(std::index_sequence<Is...>, Variable (&arr)[N], Function &&func, std::string name) {
+  return std::make_unique<StaticCut<Variable, EnumeratedCutArg<input_variable_t<Variable>, Is>...>>(arr, std::forward<Function>(func), name);
 }
 }// namespace Details
 
@@ -97,8 +107,10 @@ std::unique_ptr<Cut<VAR, CutDataType<T, Is>...>> MakeUniqueCutImpl(std::index_se
  */
 template<typename T, std::size_t N, typename FUNC, typename VAR>
 std::unique_ptr<ICut> MakeUniqueCut(VAR (&arr)[N], FUNC &&func, std::string name) {
-  return Details::MakeUniqueCutImpl<T>(std::make_index_sequence<N>{}, arr, std::forward<FUNC>(func), name);
+  return Details::MakeUniqueCutImpl(std::make_index_sequence<N>{}, arr, std::forward<FUNC>(func), name);
 }
 }// namespace Qn
+
+
 
 #endif

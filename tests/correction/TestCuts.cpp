@@ -15,12 +15,16 @@ using namespace ::testing;
 using namespace Qn;
 
 struct ICutFHolder {
-  virtual bool staticCutF(const double &v) = 0;
+  virtual bool staticCutF1(const double &v) = 0;
+  virtual bool staticCutF2(double v) = 0;
+  virtual bool staticCutF3(int v) = 0;
   virtual bool dynamicCutF(const std::vector<double> &vargs) = 0;
 };
 
 struct CutMocksHolder : public ICutFHolder {
-  MOCK_METHOD(bool, staticCutF, (const double &v), (override));
+  MOCK_METHOD(bool, staticCutF1, (const double &v), (override));
+  MOCK_METHOD(bool, staticCutF2, (double v), (override));
+  MOCK_METHOD(bool, staticCutF3, (int v), (override));
   MOCK_METHOD(bool, dynamicCutF, (const std::vector<double> &vargs),
               (override));
 };
@@ -64,11 +68,21 @@ class CutsTest : public ::testing::Test {
 
 TEST_F(CutsTest, StaticCut) {
   auto mocks = new CutMocksHolder;
-  EXPECT_CALL(*mocks, staticCutF).Times(1000).WillRepeatedly(Return(true));
+  EXPECT_CALL(*mocks, staticCutF1).Times(1000).WillRepeatedly(Return(true));
+  EXPECT_CALL(*mocks, staticCutF2).Times(1000).WillRepeatedly(Return(true));
+  EXPECT_CALL(*mocks, staticCutF3).Times(1000).WillRepeatedly(Return(true));
 
   manager->AddCutOnDetector(
       "DetPhi", {"pt"},
-      [mocks](const double &v) { return mocks->staticCutF(v); }, "static_cut");
+      [mocks](const double &v) { return mocks->staticCutF1(v); }, "static_cut_1");
+
+  manager->AddCutOnDetector(
+      "DetPhi", {"pt"},
+      [mocks](double v) { return mocks->staticCutF2(v); }, "static_cut_2");
+
+  manager->AddCutOnDetector(
+      "DetPhi", {"pt"},
+      [mocks](int v) { return mocks->staticCutF3(v); }, "static_cut_2");
 
   manager->InitializeOnNode();
 
