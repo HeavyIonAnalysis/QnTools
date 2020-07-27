@@ -29,8 +29,8 @@ namespace Qn {
 /**
  * Base class of the Cut.
  */
-struct CutBase {
-  virtual ~CutBase() = default;
+struct ICut {
+  virtual ~ICut() = default;
   virtual bool Check() const = 0;
   virtual bool Check(unsigned int) const = 0;
   virtual std::string Name() const = 0;
@@ -43,7 +43,7 @@ struct CutBase {
  * @tparam T Type of variable
  */
 template<typename VAR, typename... T>
-class Cut : public CutBase {
+class Cut : public ICut {
  public:
   Cut(VAR (&arr)[sizeof...(T)], std::function<bool(T...)> lambda, std::string name)
       : lambda_(lambda), name_(std::move(name)) {
@@ -96,7 +96,7 @@ std::unique_ptr<Cut<VAR, CutDataType<T, Is>...>> MakeUniqueCutImpl(std::index_se
  * @return Returns a unique pointer to the cut.
  */
 template<typename T, std::size_t N, typename FUNC, typename VAR>
-std::unique_ptr<CutBase> MakeUniqueCut(VAR (&arr)[N], FUNC &&func, std::string name) {
+std::unique_ptr<ICut> MakeUniqueCut(VAR (&arr)[N], FUNC &&func, std::string name) {
   return Details::MakeUniqueCutImpl<T>(std::make_index_sequence<N>{}, arr, std::forward<FUNC>(func), name);
 }
 }// namespace Qn

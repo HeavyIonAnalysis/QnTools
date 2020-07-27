@@ -35,7 +35,7 @@ namespace Qn {
 
 class CorrectionCut {
  public:
-  using CallBack = std::function<std::unique_ptr<Qn::CutBase>(const Qn::InputVariableManager &)>;
+  using CallBack = std::function<std::unique_ptr<Qn::ICut>(const Qn::InputVariableManager &)>;
   explicit CorrectionCut(CallBack callback) : callback_(std::move(callback)) {}
   ~CorrectionCut() = default;
   CorrectionCut(CorrectionCut &&) = default;
@@ -53,7 +53,7 @@ class CorrectionCut {
   }
   CorrectionCut::CallBack GetCallBack() const { return callback_; }
  private:
-  std::unique_ptr<CutBase> cut_;
+  std::unique_ptr<ICut> cut_;
   CorrectionCut::CallBack callback_;
 };
 

@@ -43,7 +43,7 @@
 
 namespace Qn {
 class CorrectionManager {
-  using CutCallBack =  std::function<std::unique_ptr<CutBase>(Qn::InputVariableManager *)>;
+  using CutCallBack =  std::function<std::unique_ptr<ICut>(Qn::InputVariableManager *)>;
  public:
   CorrectionManager() = default;
   virtual ~CorrectionManager() = default;
