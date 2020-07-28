@@ -91,19 +91,19 @@ TEST_F(CutsTest, StaticCut) {
   delete mocks;
 }
 
-//TEST_F(CutsTest, DynamicCut) {
-//  auto mocks = new CutMocksHolder;
-//  EXPECT_CALL(*mocks, dynamicCutF).Times(1000).WillRepeatedly(Return(true));
-//
-//  manager->AddCutOnDetector(
-//      "DetPhi", {"pt"},
-//      [mocks](const std::vector<double>& args) { return mocks->dynamicCutF(args); }, "static_cut");
-//
-//  manager->InitializeOnNode();
-//
-//  Fill();
-//
-//  delete mocks;
-//}
+TEST_F(CutsTest, DynamicCut) {
+  auto mocks = new CutMocksHolder;
+  EXPECT_CALL(*mocks, dynamicCutF).Times(1000).WillRepeatedly(Return(true));
+
+  manager->AddCutOnDetector(
+      "DetPhi", std::vector<std::string>({"pt"}),
+      [mocks](const std::vector<double>& args) { return mocks->dynamicCutF(args); }, "static_cut");
+
+  manager->InitializeOnNode();
+
+  Fill();
+
+  delete mocks;
+}
 
 }  // namespace

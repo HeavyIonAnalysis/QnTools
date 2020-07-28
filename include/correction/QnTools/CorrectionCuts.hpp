@@ -231,20 +231,31 @@ class CorrectionCuts {
 
 namespace CallBacks {
 
-template<std::size_t N, typename FUNCTION>
-CorrectionCut::CallBack MakeCut(const char *const (&names)[N], FUNCTION lambda, const std::string &cut_description) {
-  std::array<std::string, N> variable_names;
-  for (auto i = 0u; i < N; ++i) {
-    variable_names.at(i) = std::string(names[i]);
-  }
-  return CorrectionCut::CallBack{[variable_names, lambda, cut_description](const Qn::InputVariableManager &var) {
-    InputVariable arr[N];
-    int i = 0;
-    for (auto &name : variable_names) {
-      arr[i] = var.FindVariable(name);
-      ++i;
-    }
-    return MakeUniqueCut<const double>(arr, lambda, cut_description);
+namespace Details {
+
+
+template <size_t N>
+inline auto FindVariables(const std::array<std::string, N> &names, const Qn::InputVariableManager &manager) {
+  std::array<InputVariable, N> result;
+  std::transform(std::begin(names), std::end(names), std::begin(result),
+                 [&manager] (const std::string& name) { return manager.FindVariable(name); });
+  return result;
+}
+
+inline auto FindVariables(const std::vector<std::string> &names, const Qn::InputVariableManager &manager) {
+  std::vector<InputVariable> result(names.size());
+  std::transform(std::begin(names), std::end(names), std::begin(result),
+                 [&manager] (const std::string& name) {return manager.FindVariable(name); });
+  return result;
+}
+
+}
+
+template<typename VariableNames, typename Function>
+CorrectionCut::CallBack MakeCut(VariableNames names, Function lambda, const std::string &cut_description) {
+  return CorrectionCut::CallBack{[names, lambda, cut_description](const Qn::InputVariableManager &vm) {
+    auto variables = Details::FindVariables(names, vm);
+    return MakeUniqueCut(variables, lambda, cut_description);
   }};
 }
 }
