@@ -139,6 +139,8 @@ class ReSamples {
 
   static ReSamples PowSqrt(const ReSamples &, unsigned int);
 
+  static ReSamples OllitraultExtrapolation( const ReSamples &a, unsigned int k);
+
   static ReSamples Merge(const ReSamples &, const ReSamples &, bool);
 
   static ReSamples MergeStatistics(const ReSamples &, const ReSamples &);

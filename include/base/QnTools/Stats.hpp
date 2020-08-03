@@ -191,6 +191,7 @@ class Stats {
   friend Stats Sqrt(const Stats &);
   friend Stats Abs(const Stats &);
   friend Stats PowSqrt(const Stats &, unsigned int);
+  friend Stats OllitraultExtrapolation( const Stats &, unsigned int );
 
   template<typename SAMPLES>
   inline void Fill(const double value, const double weight, SAMPLES &&samples) {
@@ -248,6 +249,8 @@ Stats operator/(const Stats &, const Stats &);
 Stats Abs(const Stats &);
 Stats Sqrt(const Stats &);
 Stats PowSqrt(const Stats &, unsigned int);
+// fuction for extrapolation RND-sub resolution to full event
+Stats OllitraultExtrapolation( const Stats &, unsigned int );
 }// namespace Qn
 
 #endif//FLOW_STATS_H
