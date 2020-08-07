@@ -969,7 +969,12 @@ template<typename AxisType>
 DataContainer<Stats, AxisType> PowSqrt(const DataContainer<Stats, AxisType> &a, unsigned int k) {
   return a.Map([k](const Stats &x) { return Qn::PowSqrt(x, k); });
 }
-
+// fuction for extrapolation RND-sub Q1Q1 correlation to full event resolution using Ollitrault method
+// NOTE: Only Q1Q1 correlations suitable
+template<typename AxisType>
+DataContainer<Stats, AxisType> OllitraultExtrapolation(const DataContainer<Stats, AxisType> &a, unsigned int k) {
+  return a.Map([k](const Stats &x) { return Qn::OllitraultExtrapolation(x, k); });
+}
 /**
  * Transformation of a DataContainer providing the operation:
  * \f[

@@ -243,6 +243,71 @@ Stats PowSqrt(const Stats &stat, unsigned int k) {
   return result;
 }
 
+Stats OllitraultExtrapolation( const Stats &stat, unsigned int k ){
+  Stats result = stat;
+  if (result.state_ != STAT::MEAN_ERROR) result.CalculateMeanAndError();
+  auto temp_mean = result.mean_;
+  auto temp_err = result.error_;
+  // factorial lambda-function for Bessel's
+  auto fact = [](int x) {
+    double result = 1;
+    for (int i = 1; i <= x; ++i)
+      result *= i;
+    return result;
+  };
+  // Modified Bessel's function for resolution calculation
+  auto I = [fact](double nu, double z) {
+    double result = 0;
+    for (int i = 0; i < 10; ++i)
+      result +=
+          pow(z / 2.0, 2 * i + nu) / (fact(i) * tgamma(i + nu + 1));
+    return result;
+  };
+  // Resolution as the function of chi = vn/sqrt(M)
+  auto R = [I](double chi, double m) {
+    double chi2_2 = chi * chi / 2;
+    double result = sqrt( M_PI )/2 * chi * exp(-chi2_2) *
+        ( I((m -1.0)/2, chi2_2) + I( (m +1.0)/2, chi2_2) );
+    return result;
+  };
+  // firstly need to solve equation R(chi) = mean to find chi
+  auto f = [R](double chi, double value) { return R(chi, 1)-sqrt(value); }; // m=1, because correlation is Q1Q1
+  // introducing dichotomy method to solve the equation and find resolution for found chi
+  auto dichotomy = [f, R, k]( double value ) {
+    double a = 0.0;
+    double b = 3.0;
+    int i = 0;
+    while (fabs(a - b) > pow(10, -6)) {
+      double c = (a + b) / 2;
+      double fc = f(c, value);
+      if (fc == 0) break;
+      double fa = f(a, value);
+      double fb = f(b, value);
+      if (fa * fc < 0.0) {
+        b = c;
+        i++;
+        continue;
+      }
+      if (fb * fc < 0.0) {
+        a = c;
+        i++;
+        continue;
+      }
+    }
+    double chi = (a + b) / 2;
+    double res = R(sqrt(2) * chi, k);
+    return res;
+  };
+  result.mean_=dichotomy(temp_mean);
+  auto up_edge = dichotomy( temp_mean+temp_err/2 );
+  auto low_egde = dichotomy( temp_mean-temp_err/2 );
+  auto err1 = result.mean_-low_egde;
+  auto err2 = up_edge - result.mean_;
+  result.error_ = err1 >= err2 ? err1*2 : err2*2;
+  result.resamples_ = ReSamples::OllitraultExtrapolation(result.resamples_, k);
+  return result;
+}
+
 TCanvas *Stats::CIvsNSamples(const int nsteps) const {
   auto resamples(resamples_);
   resamples.CalculateMeans();

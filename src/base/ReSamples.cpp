@@ -112,6 +112,65 @@ ReSamples ReSamples::PowSqrt(const ReSamples &a, unsigned int k) {
   return result;
 }
 
+ReSamples ReSamples::OllitraultExtrapolation(const ReSamples &a, unsigned int k){
+  ReSamples result(a);
+  // factorial lambda-function for Bessel's
+  auto fact = [](int x) {
+    double result = 1;
+    for (int i = 1; i <= x; ++i)
+      result *= i;
+    return result;
+  };
+  // Modified Bessel's function for resolution calculation
+  auto I = [fact](double nu, double z) {
+    double result = 0;
+    for (int i = 0; i < 10; ++i)
+      result +=
+          pow(z / 2.0, 2 * i + nu) / (fact(i) * tgamma(i + nu + 1));
+    return result;
+  };
+  // Resolution as the function of chi = vn/sqrt(M)
+  auto R = [I](double chi, double m) {
+    double chi2_2 = chi * chi / 2;
+    double result = sqrt( M_PI_2 * chi * exp(-chi2_2) *
+        (I((m -1.0)/2, chi2_2) + I( (m +1.0)/2, chi2_2) ) );
+    return result;
+  };
+  // firstly need to solve equation R(chi) = mean to find chi
+  auto f = [R, k](double chi, double value) { return R(chi, k)-sqrt(value); };
+  // introducing dichotomy method to solve the equation and find resolution for found chi
+  auto dichotomy = [f, R]( double value ) {
+    double a = 0.0;
+    double b = 3.0;
+    int i = 0;
+    while (fabs(a - b) > pow(10, -6)) {
+      double c = (a + b) / 2;
+      double fc = f(c, value);
+      if (fc == 0) break;
+      double fa = f(a, value);
+      double fb = f(b, value);
+      if (fa * fc < 0.0) {
+        b = c;
+        i++;
+        continue;
+      }
+      if (fb * fc < 0.0) {
+        a = c;
+        i++;
+        continue;
+      }
+    }
+    double chi = (a + b) / 2;
+    double res = R(sqrt(2) * chi, 2);
+    return res;
+  };
+  for (size_t i = 0; i < result.means_.size(); ++i) {
+    auto res = dichotomy(a.means_.at(i));
+    result.means_[i] = res;
+  }
+  return result;
+}
+
 ReSamples ReSamples::Merge(const ReSamples &a, const ReSamples &b, bool merge_weights) {
   ReSamples result(b);
   for (size_t i = 0; i < result.means_.size(); ++i) {
