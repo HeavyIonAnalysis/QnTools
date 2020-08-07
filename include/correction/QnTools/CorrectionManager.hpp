@@ -147,7 +147,7 @@ class CorrectionManager {
     return;
   }
 
-  template<std::size_t N, typename FUNCTION>
+  template<std::size_t N, typename Function>
   void AddCutOnDetector(const std::string &detector_name,
                         const char *const (&variable_names)[N],
                         Function cut_function,
