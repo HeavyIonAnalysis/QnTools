@@ -71,6 +71,7 @@ add_subdirectory(src/dataframe)
 # if debug enable tests
 IF (CMAKE_BUILD_TYPE MATCHES Debug)
     add_subdirectory(tests/simulation)
+    add_subdirectory(tests/correction)
 ENDIF (CMAKE_BUILD_TYPE MATCHES Debug)
 
 # Install configuration

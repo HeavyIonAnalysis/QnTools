@@ -43,7 +43,7 @@
 
 namespace Qn {
 class CorrectionManager {
-  using CutCallBack =  std::function<std::unique_ptr<CutBase>(Qn::InputVariableManager *)>;
+  using CutCallBack =  std::function<std::unique_ptr<ICut>(Qn::InputVariableManager *)>;
  public:
   CorrectionManager() = default;
   virtual ~CorrectionManager() = default;
@@ -147,10 +147,23 @@ class CorrectionManager {
     return;
   }
 
-  template<std::size_t N, typename FUNCTION>
+  template<std::size_t N, typename Function>
   void AddCutOnDetector(const std::string &detector_name,
                         const char *const (&variable_names)[N],
-                        FUNCTION cut_function,
+                        Function cut_function,
+                        const std::string &cut_description) {
+    std::array<std::string, N> variable_names_arr;
+    std::copy(std::begin(variable_names), std::end(variable_names), std::begin(variable_names_arr));
+    bool is_channel_wise = variable_manager_.FindVariable(variable_names_arr[0]).size() > 1;
+    detectors_.AddCut(detector_name,
+                      CallBacks::MakeCut(variable_names_arr, cut_function, cut_description),
+                      is_channel_wise);
+  }
+
+  template<typename Function>
+  void AddCutOnDetector(const std::string &detector_name,
+                        const std::vector<std::string> &variable_names,
+                        Function cut_function,
                         const std::string &cut_description) {
     bool is_channel_wise = variable_manager_.FindVariable(variable_names[0]).size() > 1;
     detectors_.AddCut(detector_name,
