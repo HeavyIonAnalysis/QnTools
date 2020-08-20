@@ -32,7 +32,9 @@
 #pragma link C++ class Qn::Statistic + ;
 #pragma link C++ class Qn::Stats + ;
 #pragma link C++ class Qn::DataContainer < Qn::Stats, Qn::Axis < double>> + ;
-#pragma link C++ class Qn::DataContainer < Qn::Statistic, Qn::Axis < double>> + ;
+#pragma link C++ class Qn::DataContainer < Qn::Statistic, \
+    Qn::Axis < double>> +                                 \
+    ;
 #pragma link C++ class Qn::DataContainer < Qn::QVector, Qn::Axis < double>> + ;
 #pragma link C++ class Qn::DataContainer < double, Qn::Axis < double>> + ;
 #pragma link C++ class Qn::DataContainer < TH1F, Qn::Axis < double>> + ;
@@ -51,4 +53,26 @@
 #pragma link C++ function Qn::Sqrt < DataContainer < Qn::Stats>>;
 #pragma link C++ function Qn::Abs < DataContainer < Qn::Stats>>;
 
+#pragma read                                    \
+    sourceClass="Qn::Axis"                      \
+    source="std::string name_;std::vector<float> bin_edges_"   \
+    version="[-4]"                              \
+    targetClass="Qn::Axis<double>"              \
+    target="name_"                   \
+    include="string,vector,Axis.hpp"            \
+    code="{ name_ = onfile.name_; }"
+
+
+#pragma read                                    \
+    sourceClass="Qn::Axis"                      \
+    source="std::string name_;std::vector<float> bin_edges_"   \
+    version="[-4]"                              \
+    targetClass="Qn::Axis<double>"              \
+    target="bin_edges_"                         \
+    include="string,vector,Axis.hpp"            \
+    code="{\
+bin_edges_.resize(onfile.bin_edges_.size()); \
+for (size_t i = 0; i < onfile.bin_edges_.size(); ++i) \
+  bin_edges_[i] = double(onfile.bin_edges_[i]); \
+}"
 #endif
