@@ -10,6 +10,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 # Doxygen
 option(BUILD_DOC "Build documentation" OFF)
+option(QnTools_BUILD_TESTS "Build tests" ON)
 
 # check if Doxygen is installed
 if (CMAKE_BUILD_TYPE MATCHES "^[Rr]elease")
@@ -42,7 +43,7 @@ message(STATUS "Using ROOT: ${ROOT_VERSION} <${ROOT_CONFIG}>")
 
 set(QnTools_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
-IF(CMAKE_BUILD_TYPE MATCHES Debug)
+IF(QnTools_BUILD_TESTS)
     include(GoogleTest)
     enable_testing()
     # Googletest
@@ -63,7 +64,7 @@ IF(CMAKE_BUILD_TYPE MATCHES Debug)
     #set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
     add_subdirectory(${CMAKE_BINARY_DIR}/tests/googletest-src ${CMAKE_BINARY_DIR}/tests/googletest-build EXCLUDE_FROM_ALL)
     include_directories(${gtest_SOURCE_DIR}/include)
-ENDIF(CMAKE_BUILD_TYPE MATCHES Debug)
+ENDIF(QnTools_BUILD_TESTS)
 
 
 # Add subdirectories
@@ -72,10 +73,10 @@ add_subdirectory(src/correction)
 add_subdirectory(src/dataframe)
 
 # if debug enable tests
-IF (CMAKE_BUILD_TYPE MATCHES Debug)
+IF (QnTools_BUILD_TESTS)
     add_subdirectory(tests/simulation)
     add_subdirectory(tests/correction)
-ENDIF (CMAKE_BUILD_TYPE MATCHES Debug)
+ENDIF (QnTools_BUILD_TESTS)
 
 # Install configuration
 set(CMAKE_INSTALL_LIBDIR ${CMAKE_INSTALL_PREFIX}/lib)

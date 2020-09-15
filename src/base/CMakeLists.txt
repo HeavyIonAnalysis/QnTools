@@ -22,10 +22,10 @@ target_include_directories(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME} PRIVATE ROOT::Core ROOT::Gpad)
 
 # link to the gtest library if test are enabled
-IF (CMAKE_BUILD_TYPE MATCHES Debug)
+IF (QnTools_BUILD_TESTS)
     list(APPEND SOURCES QVector.test.cpp
                         DataContainer.test.cpp)
     add_executable(${PROJECT_NAME}UnitTests ${SOURCES})
     target_link_libraries(${PROJECT_NAME}UnitTests PRIVATE gtest_main ${PROJECT_NAME} ROOT::Core ROOT::Gpad ROOT::Hist)
     gtest_add_tests(TARGET ${PROJECT_NAME}UnitTests)
-ENDIF(CMAKE_BUILD_TYPE MATCHES Debug)
+ENDIF(QnTools_BUILD_TESTS)

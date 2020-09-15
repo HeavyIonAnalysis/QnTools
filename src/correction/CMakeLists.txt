@@ -68,9 +68,9 @@ target_include_directories(${PROJECT_NAME}
         )
 target_link_libraries(${PROJECT_NAME} PUBLIC QnTools::Base PRIVATE ROOT::Core ROOT::Hist)
 # link to the gtest library if test are enabled
-IF (CMAKE_BUILD_TYPE MATCHES Debug)
+IF (QnTools_BUILD_TESTS)
     list(APPEND SOURCES )
     add_executable(${PROJECT_NAME}UnitTests ${SOURCES})
     target_link_libraries(${PROJECT_NAME}UnitTests PRIVATE gtest_main ${PROJECT_NAME} ROOT::Core ROOT::Hist)
     gtest_add_tests(TARGET ${PROJECT_NAME}UnitTests)
-ENDIF(CMAKE_BUILD_TYPE MATCHES Debug)
+ENDIF(QnTools_BUILD_TESTS)
