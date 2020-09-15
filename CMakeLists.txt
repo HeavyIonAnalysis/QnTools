@@ -90,10 +90,10 @@ install(FILES ${headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(FILES ${headers_include} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 # Installation of ROOT dictionaries
-install(FILES ${CMAKE_BINARY_DIR}/src/base/libQnToolsBase_rdict.pcm DESTINATION ${CMAKE_INSTALL_LIBDIR})
-install(FILES ${CMAKE_BINARY_DIR}/src/base/libQnToolsBase.rootmap DESTINATION ${CMAKE_INSTALL_LIBDIR})
-install(FILES ${CMAKE_BINARY_DIR}/src/correction/libQnToolsCorrection_rdict.pcm DESTINATION ${CMAKE_INSTALL_LIBDIR})
-install(FILES ${CMAKE_BINARY_DIR}/src/correction/libQnToolsCorrection.rootmap DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(FILES ${QnTools_BINARY_DIR}/src/base/libQnToolsBase_rdict.pcm DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(FILES ${QnTools_BINARY_DIR}/src/base/libQnToolsBase.rootmap DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(FILES ${QnTools_BINARY_DIR}/src/correction/libQnToolsCorrection_rdict.pcm DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(FILES ${QnTools_BINARY_DIR}/src/correction/libQnToolsCorrection.rootmap DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 install(TARGETS QnToolsBase QnToolsCorrection QnToolsDataFrame
         EXPORT QnToolsTargets
