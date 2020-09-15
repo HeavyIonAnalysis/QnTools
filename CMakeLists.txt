@@ -63,6 +63,8 @@ IF(CMAKE_BUILD_TYPE MATCHES Debug)
     include_directories(${gtest_SOURCE_DIR}/include)
 ENDIF(CMAKE_BUILD_TYPE MATCHES Debug)
 
+set(QnTools_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+
 # Add subdirectories
 add_subdirectory(src/base)
 add_subdirectory(src/correction)

@@ -4,7 +4,7 @@ set(HEADERS DataContainer.hpp DataContainerHelper.hpp Axis.hpp QVector.hpp Stats
 set(HEADERSQNTOOLS ${HEADERS})
 list(TRANSFORM HEADERSQNTOOLS PREPEND QnTools/)
 
-include_directories(${CMAKE_SOURCE_DIR}/include/base)
+include_directories(${QnTools_SOURCE_DIR}/include/base)
 ROOT_GENERATE_DICTIONARY(G__${PROJECT_NAME} ${HEADERSQNTOOLS} LINKDEF ${PROJECT_NAME}LinkDef.h)
 
 add_library(${PROJECT_NAME} SHARED ${SOURCES} G__${PROJECT_NAME})
@@ -14,10 +14,10 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY EXPORT_NAME Base)
 target_compile_definitions(${PROJECT_NAME} PUBLIC "-DUSE_ROOT")
 target_include_directories(${PROJECT_NAME}
         PRIVATE
-        ${CMAKE_SOURCE_DIR}/base/include/QnTools
+        ${QnTools_SOURCE_DIR}/include/base/QnTools
         PUBLIC
         $<INSTALL_INTERFACE:include/QnTools>
-        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include/base/QnTools>
+        $<BUILD_INTERFACE:${QnTools_SOURCE_DIR}/include/base/QnTools>
         )
 target_link_libraries(${PROJECT_NAME} PRIVATE ROOT::Core ROOT::Gpad)
 
