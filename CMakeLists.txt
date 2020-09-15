@@ -40,11 +40,13 @@ endif (CMAKE_BUILD_TYPE MATCHES "^[Rr]elease")
 find_package(ROOT 6.20 CONFIG REQUIRED)
 message(STATUS "Using ROOT: ${ROOT_VERSION} <${ROOT_CONFIG}>")
 
+set(QnTools_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
     include(GoogleTest)
     enable_testing()
     # Googletest
-    configure_file(${CMAKE_SOURCE_DIR}/tests/CMakeLists.txt.in tests/googletest-download/CMakeLists.txt)
+    configure_file(${QnTools_SOURCE_DIR}/tests/CMakeLists.txt.in tests/googletest-download/CMakeLists.txt)
     execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
             RESULT_VARIABLE result
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/tests/googletest-download)
@@ -63,7 +65,6 @@ IF(CMAKE_BUILD_TYPE MATCHES Debug)
     include_directories(${gtest_SOURCE_DIR}/include)
 ENDIF(CMAKE_BUILD_TYPE MATCHES Debug)
 
-set(QnTools_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Add subdirectories
 add_subdirectory(src/base)
