@@ -61,10 +61,11 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY EXPORT_NAME Correction)
 target_compile_definitions(${PROJECT_NAME} PUBLIC "-DUSE_ROOT")
 target_include_directories(${PROJECT_NAME}
         PRIVATE
-        ${QnTools_SOURCE_DIR}/include/correction/QnTools
+            ${QnTools_SOURCE_DIR}/include/correction/QnTools
         PUBLIC
-        $<INSTALL_INTERFACE:include/QnTools>
-        $<BUILD_INTERFACE:${QnTools_SOURCE_DIR}/include/correction/QnTools>
+            $<BUILD_INTERFACE:${QnTools_SOURCE_DIR}/include/correction/QnTools>
+            $<BUILD_INTERFACE:${QnTools_SOURCE_DIR}/include/correction>
+            $<INSTALL_INTERFACE:include/QnTools>
         )
 target_link_libraries(${PROJECT_NAME} PUBLIC QnTools::Base PRIVATE ROOT::Core ROOT::Hist)
 # link to the gtest library if test are enabled

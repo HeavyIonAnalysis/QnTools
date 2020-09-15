@@ -14,10 +14,11 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY EXPORT_NAME Base)
 target_compile_definitions(${PROJECT_NAME} PUBLIC "-DUSE_ROOT")
 target_include_directories(${PROJECT_NAME}
         PRIVATE
-        ${QnTools_SOURCE_DIR}/include/base/QnTools
+            ${QnTools_SOURCE_DIR}/include/base/QnTools
         PUBLIC
-        $<INSTALL_INTERFACE:include/QnTools>
-        $<BUILD_INTERFACE:${QnTools_SOURCE_DIR}/include/base/QnTools>
+            $<BUILD_INTERFACE:${QnTools_SOURCE_DIR}/include/base/QnTools>
+            $<BUILD_INTERFACE:${QnTools_SOURCE_DIR}/include/base>
+            $<INSTALL_INTERFACE:include/QnTools>
         )
 target_link_libraries(${PROJECT_NAME} PRIVATE ROOT::Core ROOT::Gpad)
 
