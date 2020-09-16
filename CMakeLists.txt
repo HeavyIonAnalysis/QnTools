@@ -41,28 +41,33 @@ endif (CMAKE_BUILD_TYPE MATCHES "^[Rr]elease")
 find_package(ROOT 6.20 CONFIG REQUIRED)
 message(STATUS "Using ROOT: ${ROOT_VERSION} <${ROOT_CONFIG}>")
 
+set(QnTools_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+set(QnTools_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
+
 IF(QnTools_BUILD_TESTS)
     include(GoogleTest)
     enable_testing()
     # Googletest
-    configure_file(${CMAKE_SOURCE_DIR}/tests/CMakeLists.txt.in tests/googletest-download/CMakeLists.txt)
+    configure_file(${QnTools_SOURCE_DIR}/tests/CMakeLists.txt.in
+            ${QnTools_BINARY_DIR}/tests/googletest-download/CMakeLists.txt)
     execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
             RESULT_VARIABLE result
-            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/tests/googletest-download)
+            WORKING_DIRECTORY ${QnTools_BINARY_DIR}/tests/googletest-download)
     if (result)
         message(FATAL_ERROR "CMake step for googletest failed: ${result}")
     endif ()
     execute_process(COMMAND ${CMAKE_COMMAND} --build .
             RESULT_VARIABLE result
-            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/tests/googletest-download)
+            WORKING_DIRECTORY ${QnTools_BINARY_DIR}/tests/googletest-download)
     if (result)
         message(FATAL_ERROR "Build step for googletest failed: ${result}")
     endif ()
     # Prevent overriding the parent project's compiler/linker settings on Windows
     #set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-    add_subdirectory(${CMAKE_BINARY_DIR}/tests/googletest-src ${CMAKE_BINARY_DIR}/tests/googletest-build EXCLUDE_FROM_ALL)
+    add_subdirectory(${QnTools_BINARY_DIR}/tests/googletest-src ${QnTools_BINARY_DIR}/tests/googletest-build EXCLUDE_FROM_ALL)
     include_directories(${gtest_SOURCE_DIR}/include)
 ENDIF(QnTools_BUILD_TESTS)
+
 
 # Add subdirectories
 add_subdirectory(src/base)
@@ -85,10 +90,10 @@ install(FILES ${headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(FILES ${headers_include} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 # Installation of ROOT dictionaries
-install(FILES ${CMAKE_BINARY_DIR}/src/base/libQnToolsBase_rdict.pcm DESTINATION ${CMAKE_INSTALL_LIBDIR})
-install(FILES ${CMAKE_BINARY_DIR}/src/base/libQnToolsBase.rootmap DESTINATION ${CMAKE_INSTALL_LIBDIR})
-install(FILES ${CMAKE_BINARY_DIR}/src/correction/libQnToolsCorrection_rdict.pcm DESTINATION ${CMAKE_INSTALL_LIBDIR})
-install(FILES ${CMAKE_BINARY_DIR}/src/correction/libQnToolsCorrection.rootmap DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(FILES ${QnTools_BINARY_DIR}/src/base/libQnToolsBase_rdict.pcm DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(FILES ${QnTools_BINARY_DIR}/src/base/libQnToolsBase.rootmap DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(FILES ${QnTools_BINARY_DIR}/src/correction/libQnToolsCorrection_rdict.pcm DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(FILES ${QnTools_BINARY_DIR}/src/correction/libQnToolsCorrection.rootmap DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 install(TARGETS QnToolsBase QnToolsCorrection QnToolsDataFrame
         EXPORT QnToolsTargets
