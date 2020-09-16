@@ -4,7 +4,9 @@ if ("${CMAKE_VERSION}" VERSION_GREATER "3.12.0")
     cmake_policy(SET CMP0074 NEW)
 endif ()
 
-project(QnTools VERSION 0.1.0 LANGUAGES CXX)
+project(QnTools VERSION 0.0.1
+        LANGUAGES CXX
+        HOMEPAGE_URL https://github.com/HeavyIonAnalysis/QnTools)
 
 set(CMAKE_CXX_STANDARD 17)
 
