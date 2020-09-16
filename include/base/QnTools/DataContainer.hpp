@@ -404,6 +404,7 @@ class DataContainer : public TObject {
       std::vector<size_type> projindices;
       indices.reserve(dimension_);
       projindices.resize(projection.dimension_);
+      std::set<std::vector<size_type>> initialized_bins;
       // other bins
       for (auto bin : data_) {
         this->GetIndex(indices, linearindex);
@@ -414,7 +415,11 @@ class DataContainer : public TObject {
             ++iprojbin;
           }
         }
-        projection.At(projindices) = lambda(projection.At(projindices), bin);
+        if (initialized_bins.insert(projindices).second) {
+          projection.At(projindices) = bin;
+        } else {
+          projection.At(projindices) = lambda(projection.At(projindices), bin);
+        }
         ++linearindex;
       }
     }
@@ -597,6 +602,8 @@ class DataContainer : public TObject {
     unsigned long ibin = 0;
     std::vector<size_type> indices;
     indices.reserve(dimension_);
+
+    std::set<std::vector<size_t>> initialized_bins;
     for (const auto &bin : data_) {
       GetIndex(indices, ibin);
       auto binlow = axes_[axisposition].GetLowerBinEdge(indices[axisposition]);
@@ -604,7 +611,14 @@ class DataContainer : public TObject {
       auto binmid = binlow + (binhigh - binlow) / 2;
       auto rebinnedindex = rebinaxis.FindBin(binmid);
       indices[axisposition] = static_cast<unsigned long>(rebinnedindex);
-      if (rebinnedindex != -1) rebinned.At(indices) = lambda(rebinned.At(indices), bin);
+      if (rebinnedindex != -1) {
+        /* Qn::Stats is not initialized, assigning bin */
+        if (initialized_bins.insert(indices).second) {
+          rebinned.At(indices) = bin;
+        } else {
+          rebinned.At(indices) = lambda(rebinned.At(indices), bin);
+        }
+      }
       ++ibin;
     }
     return rebinned;
@@ -862,7 +876,7 @@ class DataContainer : public TObject {
   }
 
   /// \cond CLASSIMP
-  ClassDef(DataContainer, 13);
+  ClassDef(DataContainer, 14);
   /// \endcond
 };
 
