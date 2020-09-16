@@ -238,7 +238,7 @@ auto dfs = Qn::Correlation::Resample(df, n_samples);
 
 auto detector_names_trk = CreateDetectorNames(detectors_trk.size(), "DetTrk", correction_steps);
 
-constexpr auto kObs = Qn::Stats::Weights::OBSERVABLE;
+constexpr auto kObs = Qn::Stat::WeightType::OBSERVABLE;
 auto event_axes = Qn::MakeAxes(event);
 
 std::map<std::string, ROOT::RDF::RResultPtr<Qn::Correlation::CorrelationActionBase>> correlations;
@@ -254,7 +254,7 @@ correlations.emplace(detector + "_" + correlation_name, c22);
 
 auto out_file = new TFile("correlationout.root", "RECREATE");
 out_file->cd();
-std::vector<Qn::DataContainerStats> stats;
+std::vector<Qn::DataContainerStatCollect> stats;
 for (auto &correlation : correlations) {
 //    correlation.second.GetValue().GetDataContainer().Write(correlation.first.data());
 stats.push_back(correlation.second.GetValue().GetDataContainer());

@@ -129,8 +129,8 @@ class RecenterAction<AxesConfig, std::tuple<EventParameters...>> {
       for (std::size_t i_harmonic = 0; i_harmonic < harmonics_vector_.size();
            ++i_harmonic) {
         if (use_width_equalization_) {
-          x_width = x_[i_harmonic][correction_bin].Sigma();
-          y_width = y_[i_harmonic][correction_bin].Sigma();
+          x_width = x_[i_harmonic][correction_bin].StandardDeviation();
+          y_width = y_[i_harmonic][correction_bin].StandardDeviation();
         }
         const auto harmonic = harmonics_vector_[i_harmonic];
         corrected_q[ibin].SetQ(harmonic,
@@ -419,7 +419,7 @@ class RecenterAction<AxesConfig, std::tuple<EventParameters...>> {
 
   TH1D CreateBinOccupancyHisto() {
     auto min_max = std::minmax_element(
-        x_[0].begin(), x_[0].end(), [](const Statistic &a, const Statistic &b) {
+        x_[0].begin(), x_[0].end(), [](const Statistics &a, const Statistics &b) {
           return a.Entries() < b.Entries();
         });
     auto min_entries = min_max.first->Entries();

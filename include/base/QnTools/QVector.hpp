@@ -108,6 +108,7 @@ class QVector {
       case Normalization::M: return "M";
       case Normalization::SQRT_M: return "SqrtM";
       case Normalization::MAGNITUDE: return "Magnitude";
+      default: return "None";
     }
   }
 

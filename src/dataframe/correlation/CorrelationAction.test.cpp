@@ -63,12 +63,12 @@ TEST(CorrelationAction, BasicIntegratedQ) {
   auto f_test = [](const Qn::QVector &a) { return a.x(1) + a.y(1); };
   std::vector<Qn::DataContainerQVector> initialization{q};
   auto correlation = Qn::Correlation::MakeCorrelationAction(
-      "test", f_test, {"q"}, {Qn::Stats::Weights::OBSERVABLE}, event_axes, 0);
+      "test", f_test, {"q"}, {Qn::Stat::WeightType::OBSERVABLE}, event_axes, 0);
   auto avg = Qn::MakeAverageHelper(correlation);
   auto res = avg.SetInitializationWithInitializationObject(&initialization)
                  .BookMe(dfs);
   auto data_container = res->GetDataContainer();
-  EXPECT_NEAR(data_container.At(0).Mean(), 0.70710678, 1e-5);
-  EXPECT_EQ(data_container.At(0).N(), 91);
-  EXPECT_EQ(data_container.At(1).N(), 9);
+  EXPECT_NEAR(data_container.At(0).GetStatistics().Mean(), 0.70710678, 1e-5);
+  EXPECT_EQ(data_container.At(0).GetStatistics().N(), 91);
+  EXPECT_EQ(data_container.At(1).GetStatistics().N(), 9);
 }

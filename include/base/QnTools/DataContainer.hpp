@@ -23,7 +23,12 @@
 #include <utility>
 #include <vector>
 
+#include "Axis.hpp"
+#include "DataContainerHelper.hpp"
+#include "QVector.hpp"
 #include "Rtypes.h"
+#include "StatCalculate.hpp"
+#include "StatCollect.hpp"
 #include "TBrowser.h"
 #include "TClass.h"
 #include "TCollection.h"
@@ -33,12 +38,6 @@
 #include "TH1F.h"
 #include "TMath.h"
 #include "TObject.h"
-
-#include "Axis.hpp"
-#include "QVector.hpp"
-#include "Stats.hpp"
-
-#include "DataContainerHelper.hpp"
 
 /**
  * QnCorrectionsframework
@@ -85,6 +84,14 @@ class DataContainer : public TObject {
   DataContainer &operator=(DataContainer &&detector) = default;
   DataContainer &operator=(DataContainer &detector) = default;
   DataContainer &operator=(const DataContainer &detector) = default;
+
+  template<typename OtherType>
+  explicit DataContainer(DataContainer<OtherType> &other) {
+    AddAxes(other.GetAxes());
+    for (auto i = 0u; i < data_.size(); ++i) {
+      At(i) = T(other.At(i));
+    }
+  }
 
   using QnAxes = std::vector<AxisType>;
   using size_type = std::size_t;
@@ -421,7 +428,7 @@ class DataContainer : public TObject {
  */
   DataContainer<T, AxisType>
   Projection(const std::vector<std::string> axis_names = {}) const {
-    auto lambda = [](const T &a, const T &b) { return Qn::MergeBins(a, b); };
+    auto lambda = [](const T &a, const T &b) { return Qn::Merge(a, b); };
     return Projection(axis_names, lambda);
   }
 
@@ -610,7 +617,7 @@ class DataContainer : public TObject {
  * @return rebinned datacontainer.
  */
   DataContainer<T, AxisType> Rebin(const AxisType &rebinaxis) const {
-    auto lambda = [](const T &a, const T &b) { return Qn::MergeBins(a, b); };
+    auto lambda = [](const T &a, const T &b) { return Qn::Merge(a, b); };
     return Rebin(rebinaxis, lambda);
   }
 
@@ -849,6 +856,11 @@ class DataContainer : public TObject {
     (void) graph;
   }
 
+
+  void SetErrors(StatCalculate::ErrorType errors) {
+    (void) errors;
+  }
+
   /// \cond CLASSIMP
   ClassDef(DataContainer, 13);
   /// \endcond
@@ -860,8 +872,10 @@ class DataContainer : public TObject {
 //-----------------------------------------//
 template<typename T>
 using DataD = DataContainer<T, AxisD>;
-using DataContainerStats = DataContainer<Qn::Stats, AxisD>;
-using DataContainerStatistic = DataContainer<Qn::Statistic, AxisD>;
+using DataContainerStatCalculate = DataContainer<Qn::StatCalculate, AxisD>;
+using DataContainerStatCollect = DataContainer<Qn::StatCollect, AxisD>;
+using DataContainerStatistic = DataContainer<Qn::Statistics, AxisD>;
+using BinnedStatistics = DataContainer<Qn::StatCalculate, AxisD>;
 using DataContainerQVector = DataContainer<Qn::QVector, AxisD>;
 
 //--------------------------------------------//
@@ -869,70 +883,69 @@ using DataContainerQVector = DataContainer<Qn::QVector, AxisD>;
 //--------------------------------------------//
 
 template<>
-inline void DataContainer<Stats, AxisD>::Browse(TBrowser *b) {
-  DataContainerHelper::StatsBrowse(this, b);
-}
-template<>
-inline void DataContainer<Statistic, AxisD>::Browse(TBrowser *b) {
-  DataContainerHelper::StatisticBrowse(this, b);
-}
-template<>
-inline void DataContainer<Stats, AxisD>::NDraw(Option_t *option, const std::string &axis_name) {
-  DataContainerHelper::NDraw(*this, option, axis_name);
+inline void DataContainer<StatCalculate, AxisD>::SetErrors(StatCalculate::ErrorType type) {
+  for (auto &bin : data_) bin.SetErrorType(type);
 }
 
 template<>
-inline void DataContainer<Statistic, AxisD>::Fill(const double value, const double weight, const std::vector<double> &coordinates) {
+inline void DataContainer<StatCollect, AxisD>::Browse(TBrowser *b) {
+  DataContainerHelper::Browse(this, b);
+}
+
+template<>
+inline void DataContainer<Statistics, AxisD>::Browse(TBrowser *b) {
+  DataContainerHelper::Browse(this, b);
+}
+
+template<>
+inline void DataContainer<StatCalculate, AxisD>::Browse(TBrowser *b) {
+  DataContainerHelper::Browse(this, b);
+}
+
+template<>
+inline void DataContainer<Statistics, AxisD>::NDraw(Option_t *option, const std::string &axis_name) {
+  DataContainerHelper::ProjectandDraw(*this, option, axis_name);
+}
+template<>
+inline void DataContainer<StatCollect, AxisD>::NDraw(Option_t *option, const std::string &axis_name) {
+  DataContainerHelper::ProjectandDraw(*this, option, axis_name);
+}
+template<>
+inline void DataContainer<StatCalculate, AxisD>::NDraw(Option_t *option, const std::string &axis_name) {
+  DataContainerHelper::ProjectandDraw(*this, option, axis_name);
+}
+
+template<>
+inline void DataContainer<Statistics, AxisD>::Fill(const double value, const double weight, const std::vector<double> &coordinates) {
   auto i_bin = GetLinearIndex(coordinates);
   if (i_bin != -1) {
     data_.at(i_bin).Fill(value, weight);
   }
 }
 
-template<>
-inline DataContainer<Stats, AxisD> DataContainer<Stats, AxisD>::ApplyTF1(TF1 *function) const {
-  if (dimension_ != 1 || integrated_) return *this;
-  DataContainer<Stats, AxisD> result(*this);
-  for (std::size_t i = 0; i < data_.size(); ++i) {
-    const auto value = function->Eval(axes_[0].GetBinCenter(i));
-    result[i] = result[i] * value;
-  }
-  return result;
-}
+//template<>
+//inline DataContainer<St, AxisD> DataContainer<Stats, AxisD>::ApplyTF1(TF1 *function) const {
+//  if (dimension_ != 1 || integrated_) return *this;
+//  DataContainer<Stats, AxisD> result(*this);
+//  for (std::size_t i = 0; i < data_.size(); ++i) {
+//    const auto value = function->Eval(axes_[0].GetBinCenter(i));
+//    result[i] = result[i] * value;
+//  }
+//  return result;
+//}
 
-template<>
-inline DataContainer<Stats, AxisD> DataContainer<Stats, AxisD>::ScaleWithTGraphErrors(TGraphErrors *graph) const {
-  if (dimension_ != 1 || integrated_) return *this;
-  if ((unsigned long) graph->GetN() != data_.size()) return *this;
-  DataContainer<Stats, AxisD> result(*this);
-  for (std::size_t i = 0; i < data_.size(); ++i) {
-    const auto value = graph->GetY()[i];
-    const auto error = graph->GetErrorYhigh(i);
-    result[i] = result[i] * std::make_pair(value, error);
-  }
-  return result;
-}
-
-//-----------------------------------//
-// Template specializations for bits //
-//-----------------------------------//
-template<>
-inline void DataContainer<Stats, AxisD>::SetSetting(const unsigned int bits) {
-  auto cleanbits = 0x1FFC000 & bits;// 0x1FFC000 bitmask with only bits from 14 - 24 on.
-  SetBit(cleanbits, true);
-  for (auto &bin : data_) {
-    bin.SetBits(cleanbits);
-  }
-}
-
-template<>
-inline void DataContainer<Stats, AxisD>::ResetSetting(const unsigned int bits) {
-  auto cleanbits = 0x1FFC000 & bits;// 0x1FFC000 bitmask with only bits from 14 - 24 on.
-  ResetBit(cleanbits);
-  for (auto &bin : data_) {
-    bin.ResetBits(cleanbits);
-  }
-}
+//template<>
+//inline DataContainer<Stats, AxisD> DataContainer<Stats, AxisD>::ScaleWithTGraphErrors(TGraphErrors *graph) const {
+//  if (dimension_ != 1 || integrated_) return *this;
+//  if ((unsigned long) graph->GetN() != data_.size()) return *this;
+//  DataContainer<Stats, AxisD> result(*this);
+//  for (std::size_t i = 0; i < data_.size(); ++i) {
+//    const auto value = graph->GetY()[i];
+//    const auto error = graph->GetErrorYhigh(i);
+//    result[i] = result[i] * std::make_pair(value, error);
+//  }
+//  return result;
+//}
 
 //-----------------------------------------//
 // Operations for DataContainer arithmetic //
@@ -958,6 +971,14 @@ DataContainer<T, AxisType> operator*(const DataContainer<T, AxisType> &a, double
   return a.Map([b](const T &a) { return a * b; });
 }
 template<typename T, typename AxisType>
+DataContainer<T, AxisType> operator*(double b, const DataContainer<T, AxisType> &a) {
+  return a.Map([b](const T &a) { return a * b; });
+}
+template<typename T, typename AxisType>
+DataContainer<T, AxisType> operator/(const DataContainer<T, AxisType> &a, double b) {
+  return a.Map([b](const T &a) { return a / b; });
+}
+template<typename T, typename AxisType>
 DataContainer<T, AxisType> Sqrt(const DataContainer<T, AxisType> &a) {
   return a.Map([](const T &x) { return Qn::Sqrt(x); });
 }
@@ -965,16 +986,16 @@ template<typename T, typename AxisType>
 DataContainer<T, AxisType> Abs(const DataContainer<T, AxisType> &a) {
   return a.Map([](const T &x) { return Qn::Abs(x); });
 }
-template<typename AxisType>
-DataContainer<Stats, AxisType> PowSqrt(const DataContainer<Stats, AxisType> &a, unsigned int k) {
-  return a.Map([k](const Stats &x) { return Qn::PowSqrt(x, k); });
+template<typename T, typename AxisType>
+DataContainer<T, AxisType> Pow(const DataContainer<T, AxisType> &a, unsigned int k) {
+  return a.Map([k](const T &x) { return Qn::Pow(x, k); });
 }
-// fuction for extrapolation RND-sub Q1Q1 correlation to full event resolution using Ollitrault method
-// NOTE: Only Q1Q1 correlations suitable
-template<typename AxisType>
-DataContainer<Stats, AxisType> OllitraultExtrapolation(const DataContainer<Stats, AxisType> &a, unsigned int k) {
-  return a.Map([k](const Stats &x) { return Qn::OllitraultExtrapolation(x, k); });
-}
+//// fuction for extrapolation RND-sub Q1Q1 correlation to full event resolution using Ollitrault method
+//// NOTE: Only Q1Q1 correlations suitable
+//template<typename AxisType>
+//DataContainer<Stats, AxisType> OllitraultExtrapolation(const DataContainer<Stats, AxisType> &a, unsigned int k) {
+//  return a.Map([k](const Stats &x) { return Qn::OllitraultExtrapolation(x, k); });
+//}
 /**
  * Transformation of a DataContainer providing the operation:
  * \f[
