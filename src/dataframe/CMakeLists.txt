@@ -34,6 +34,7 @@ IF (QnTools_BUILD_TESTS)
             common/QVectorHelper.test.cpp
             common/QVectorNormalizationHelper.test.cpp
             correction/RecenterAction.test.cpp
+            correction/RecenterVector.test.cpp
             correlation/CorrelationAction.test.cpp
             )
     add_executable(${PROJECT_NAME}UnitTests ${SOURCES})

@@ -158,17 +158,37 @@ class RecenterAction<AxesConfig, std::tuple<EventParameters...>> {
   }
 
   /**
+ * Loads the correction histograms from a previous iteration from the file.
+ * @param file file which contains the correction histograms.
+ * @param reader reader which wraps the input tree. Needed to perform the
+ * initialization.
+ */
+  bool LoadCorrectionFromFile(TDirectory *dir, TTreeReader &reader) {
+    using namespace std::literals::string_literals;
+    reader.Restart();
+    TTreeReaderValue<DataContainerQVector> input_data(reader,
+                                                      base_q_name_.data());
+    reader.Next();
+    if (input_data.GetSetupStatus() < 0) {
+      throw std::runtime_error(
+          "The Q-Vector entry "s + input_data.GetBranchName() +
+              " in the tree is not valid. Cannot setup the recentering");
+    }
+    return LoadCorrectionFromFile(dir, *input_data);
+  }
+
+  /**
    * Loads the correction histograms from a previous iteration from the file.
    * @param file file which contains the correction histograms.
    * @param reader reader which wraps the input tree. Needed to perform the
    * initialization.
    */
-  bool LoadCorrectionFromFile(TDirectory *dir, TTreeReader &reader) {
+  bool LoadCorrectionFromFile(TDirectory *dir, InitializationObject &object) {
     if (!dir) {
       std::cout << "Rerunning the correction step." << std::endl;
       return false;
     }
-    Initialize(reader);
+    Initialize(object);
     if (!dir->FindKey(GetNameIncludingAxesAndHarmonics().data())) {
       std::cout << "correction " << GetName() << ": Not found in the file "
                 << dir->GetName() << ". ";
@@ -243,24 +263,35 @@ class RecenterAction<AxesConfig, std::tuple<EventParameters...>> {
   }
 
  private:
-  friend class AverageHelper<RecenterAction>;  /// Helper friend
-  bool use_width_equalization_ =
-      false;  /// Switch for applying the width equalization procedure.
-  unsigned int min_entries_ =
-      10;  /// Number of minimum entries in a bin required to apply corrections.
-  unsigned int stride_ = 1.;  /// stride of the differential Q-vector.
-  std::vector<unsigned int> harmonics_vector_;  /// vector of enabled harmonics.
-  std::string correction_name_;                 /// name of the correction step.
-  std::string previous_q_name_;                 /// name of the input Q-vector.
-  std::string
-      base_q_name_;  /// name of the input Q-vector used for Initialization.
-  AxesConfig event_axes_;  /// event axes used to classify the events in classes
-                           /// for the correction step.
-  std::vector<Qn::DataContainerStatistic>
-      x_;  /// x component of correction histograms.
-  std::vector<Qn::DataContainerStatistic>
-      y_;  /// y component correction histograms.
+  /// Helper friend
+  friend class AverageHelper<RecenterAction>;
+  /// Switch for applying the width equalization procedure.
+  bool use_width_equalization_ = false;
+  /// Number of minimum entries in a bin required to apply corrections.
+  unsigned int min_entries_ = 0;
+  /// stride of the differential Q-vector.
+  unsigned int stride_ = 1.;
+  /// vector of enabled harmonics.
+  std::vector<unsigned int> harmonics_vector_;
+  /// name of the correction step.
+  std::string correction_name_;
+  /// name of the input Q-vector.
+  std::string previous_q_name_;
+  /// name of the input Q-vector used for Initialization.
+  std::string base_q_name_;
+  /// event axes used to classify the events in classes for the correction step.
+  AxesConfig event_axes_;
+  /// x component of correction histograms.
+  std::vector<Qn::DataContainerStatistic> x_;
+  /// y component correction histograms.
+  std::vector<Qn::DataContainerStatistic> y_;
 
+  /**
+ * Initializes the correction step using the information inside the
+ * Initialization object.
+ * @param reader reader wrapping the input Q-vector tree. This function is
+ * required by the AverageHelper.
+ */
   void Initialize(InitializationObject &obj) {
     auto input_q = obj.At(0);
     input_q.InitializeHarmonics();
@@ -284,6 +315,30 @@ class RecenterAction<AxesConfig, std::tuple<EventParameters...>> {
   }
 
   /**
+   * Try next event, if current event in the reader was invalid for initialization
+   * @param reader reader containing the events for initialization
+   * @param input_data input value for initialization
+   * @param i_event current event
+   * @param n_events max number of events for initialization
+   */
+  void TryNextEventInReader(TTreeReader &reader,
+                            TTreeReaderValue<DataContainerQVector> & input_data,
+                            Long64_t i_event,
+                            Long64_t n_events) {
+    if (i_event > n_events) {
+      throw std::out_of_range("ERROR: Tried 10% of the events."
+          "Could not find a good event to initialize."
+          "Try to initialize using the InitializationObject.");
+    }
+    try {
+      reader.Next();
+      Initialize(*input_data);
+    } catch (std::out_of_range &) {
+      TryNextEventInReader(reader, input_data, i_event+1, n_events);
+    }
+  }
+
+  /**
    * Initializes the correction step using the information inside the input
    * tree.
    * @param reader reader wrapping the input Q-vector tree. This function is
@@ -300,7 +355,11 @@ class RecenterAction<AxesConfig, std::tuple<EventParameters...>> {
           "The Q-Vector entry "s + input_data.GetBranchName() +
           " in the tree is not valid. Cannot setup the recentering");
     }
-    Initialize(*input_data);
+    try {
+      Initialize(*input_data);
+    } catch (std::out_of_range &) {
+      TryNextEventInReader(reader, input_data, 2, reader.GetEntries() / 10);
+    }
   }
 
   /**
@@ -368,6 +427,8 @@ class RecenterAction<AxesConfig, std::tuple<EventParameters...>> {
     stride_ = other.stride_;
     harmonics_vector_ = other.harmonics_vector_;
     event_axes_ = other.event_axes_;
+    min_entries_ = other.min_entries_;
+    use_width_equalization_ = other.use_width_equalization_;
     x_ = other.x_;
     y_ = other.y_;
   }

@@ -76,7 +76,7 @@ class Axis {
                      std::back_inserter(result),
                      [](const T &a, const T &b) {
                        double epsilon = std::fabs(a*1e-3);
-                       return std::fabs(a-b) < epsilon;
+                       return std::fabs(a-b) <= epsilon;
                      });
       same_bins = std::all_of(std::begin(result), std::end(result), [](bool a) { return a; });
     }

@@ -22,8 +22,6 @@
 #include "AxesConfiguration.hpp"
 #include "RecenterAction.hpp"
 
-TEST(RecenterActionUnitTest, Constructor) { ASSERT_EQ(1, 1); }
-
 TEST(RecenterActionUnitTest, RDataFrame) {
   ROOT::RDataFrame df(100);
   std::size_t phi_size = 4;
