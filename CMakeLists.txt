@@ -76,6 +76,7 @@ add_subdirectory(src/dataframe)
 
 # if debug enable tests
 IF (QnTools_BUILD_TESTS)
+    add_subdirectory(tests/base)
     add_subdirectory(tests/simulation)
     add_subdirectory(tests/correction)
 ENDIF (QnTools_BUILD_TESTS)

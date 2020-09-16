@@ -18,6 +18,7 @@
 #ifndef FLOW_DATACONTAINERHELPER_H
 #define FLOW_DATACONTAINERHELPER_H
 
+#include "TVirtualPad.h"
 #include "TBrowser.h"
 #include "TEnv.h"
 #include "TGraphAsymmErrors.h"
@@ -25,15 +26,13 @@
 #include "TMultiGraph.h"
 
 #include "Axis.hpp"
-#include "ReSamples.hpp"
-#include "Stats.hpp"
+#include "StatCalculate.hpp"
+#include "StatCollect.hpp"
 
 namespace Qn {
 //Forward declaration of DataContainer
 template<typename T, typename AxisType>
 class DataContainer;
-
-inline float MergeBins(const float &a, const float &b) { return a + b; }
 
 namespace Internal {
 
@@ -68,47 +67,60 @@ struct ProjectionDrawable : public TNamed {
  */
 class DataContainerHelper {
  public:
-  enum class Errors { Yonly,
-                      XandY };
+  enum class Errors { Yonly, XandY };
 
-  static TGraph *ToErrorComparisonGraph(const Qn::DataContainer<Stats, AxisD> &data);
-  static TGraph *ToBootstrapScatterGraph(const Qn::DataContainer<Stats, AxisD> &data);
-  static TGraphAsymmErrors *ToTGraph(const Qn::DataContainer<Stats, AxisD> &data, Errors x = Errors::Yonly);
-  static TGraphAsymmErrors *ToTGraph(const Qn::DataContainer<Statistic, AxisD> &data, Errors x = Errors::Yonly);
-  static TGraphAsymmErrors *ToTGraphShifted(const Qn::DataContainer<Stats, AxisD> &data,
-                                            int i,
-                                            int max,
-                                            Errors x = Errors::Yonly);
-  static TGraphAsymmErrors *ToTGraphShifted(const Qn::DataContainer<Statistic, AxisD> &data,
-                                            int i,
-                                            int max,
-                                            Errors x = Errors::Yonly);
-  static TMultiGraph *ToTMultiGraph(const Qn::DataContainer<Stats, AxisD> &data,
-                                    const std::string &axisname,
-                                    Errors x = Errors::Yonly);
+  static TGraphErrors *ToTGraph(const Qn::DataContainer<Statistics, AxisD> &data, Errors x = Errors::Yonly);
+  static TGraphErrors *ToTGraph(const Qn::DataContainer<StatCollect, AxisD> &data, Errors x = Errors::Yonly);
+  static TGraphErrors *ToTGraph(const Qn::DataContainer<StatCalculate, AxisD> &data, Errors x = Errors::Yonly);
 
  private:
-  friend Qn::DataContainer<Stats, AxisD>;
-  friend Qn::DataContainer<Statistic, AxisD>;
-  static void StatsBrowse(Qn::DataContainer<Stats, AxisD> *data, TBrowser *b);
-  static void StatisticBrowse(Qn::DataContainer<Statistic, AxisD> *data, TBrowser *b);
-  static void NDraw(Qn::DataContainer<Stats, AxisD> &data, std::string option, const std::string &axis_name);
+  friend Qn::DataContainer<StatCollect, AxisD>;
+  friend Qn::DataContainer<Statistics, AxisD>;
+  friend Qn::DataContainer<StatCalculate, AxisD>;
+
+  static void Browse(Qn::DataContainer<Statistics, AxisD> *data, TBrowser *b);
+  static void Browse(Qn::DataContainer<StatCollect, AxisD> *data, TBrowser *b);
+  static void Browse(Qn::DataContainer<StatCalculate, AxisD> *data, TBrowser *b);
+
+  template <typename DataContainer>
+  static void ProjectandDraw(DataContainer &data, std::string option, const std::string &axis_name) {
+    option = (option.empty()) ? std::string("ALP PMC PLC Z") : option;
+    Errors err = Errors::Yonly;
+    auto foundoption = option.find("XErrors");
+    if (foundoption != std::string::npos) {
+      err = Errors::XandY;
+      option.erase(foundoption, std::string("XErrors").size());
+    }
+    if (data.axes_.size() == 1) {
+      auto graph = DataContainerHelper::ToTGraph(data, err);
+      graph->Draw(option.data());
+    } else if (data.axes_.size() > 1 && !axis_name.empty()) {
+      auto projected = data.Projection({axis_name});
+      auto graph = DataContainerHelper::ToTGraph(projected, err);
+      graph->Draw(option.data());
+    } else {
+      std::cout << "Not drawn because the DataContainer has dimension: "
+                << data.dimension_ << std::endl;
+      std::cout << "Only DataContainers with dimension <=2 can be drawn."
+                << std::endl;
+    }
+  }
+
 };
 
-using Errors = DataContainerHelper::Errors;
-constexpr auto ToErrorComparisonGraph = &DataContainerHelper::ToErrorComparisonGraph;
-constexpr auto ToBootstrapScatterGraph = &DataContainerHelper::ToBootstrapScatterGraph;
-constexpr auto ToTMultiGraph = &DataContainerHelper::ToTMultiGraph;
+using DrawErrors = DataContainerHelper::Errors;
 
-inline TGraphAsymmErrors *ToTGraph(const Qn::DataContainer<Statistic, AxisD> &data, Qn::Errors x = Errors::Yonly) {
+inline TGraphErrors *ToTGraph(const Qn::DataContainer<Statistics, AxisD> &data, Qn::DrawErrors x = DrawErrors::Yonly) {
   return DataContainerHelper::ToTGraph(data, x);
 }
 
-inline TGraphAsymmErrors *ToTGraph(const Qn::DataContainer<Stats, AxisD> &data, Qn::Errors x = Errors::Yonly) {
+inline TGraphErrors *ToTGraph(const Qn::DataContainer<StatCollect, AxisD> &data, Qn::DrawErrors x = DrawErrors::Yonly) {
   return DataContainerHelper::ToTGraph(data, x);
 }
 
-TCanvas *UncertaintyComparison(const Qn::DataContainer<Stats, AxisD> &data);
+inline TGraphErrors *ToTGraph(DataContainer<StatCalculate, AxisD> &data, Qn::DrawErrors x = DrawErrors::Yonly) {
+  return DataContainerHelper::ToTGraph(data, x);
+}
 
 }// namespace Qn
 

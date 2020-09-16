@@ -28,11 +28,14 @@
 #pragma link C++ class Qn::Axis < double> + ;
 #pragma link C++ class Qn::QVec + ;
 #pragma link C++ class Qn::QVector + ;
-#pragma link C++ class Qn::ReSamples + ;
-#pragma link C++ class Qn::Statistic + ;
-#pragma link C++ class Qn::Stats + ;
-#pragma link C++ class Qn::DataContainer < Qn::Stats, Qn::Axis < double>> + ;
-#pragma link C++ class Qn::DataContainer < Qn::Statistic, Qn::Axis < double>> + ;
+#pragma link C++ class Qn::Statistics + ;
+#pragma link C++ class Qn::BootStrap + ;
+#pragma link C++ class Qn::Stat + ;
+#pragma link C++ class Qn::StatCollect + ;
+#pragma link C++ class Qn::StatCalculate + ;
+#pragma link C++ class Qn::DataContainer < Qn::Statistics, Qn::Axis < double>> + ;
+#pragma link C++ class Qn::DataContainer < Qn::StatCollect, Qn::Axis < double>> + ;
+#pragma link C++ class Qn::DataContainer < Qn::StatCalculate, Qn::Axis < double>> + ;
 #pragma link C++ class Qn::DataContainer < Qn::QVector, Qn::Axis < double>> + ;
 #pragma link C++ class Qn::DataContainer < double, Qn::Axis < double>> + ;
 #pragma link C++ class Qn::DataContainer < TH1F, Qn::Axis < double>> + ;
@@ -40,15 +43,13 @@
 
 #pragma link C++ typedef Qn::AxisF;
 #pragma link C++ typedef Qn::AxisD;
-#pragma link C++ typedef Qn::DataContainerStats;
-#pragma link C++ typedef Qn::DataContainerStatistic;
+#pragma link C++ typedef Qn::BinnedStatistics;
+#pragma link C++ typedef Qn::DataContainerStatistics;
+#pragma link C++ typedef Qn::DataContainerStatCollect;
+#pragma link C++ typedef Qn::DataContainerStatCalculate;
 #pragma link C++ typedef Qn::DataContainerQVector;
 
 #pragma link C++ function Qn::ToTGraph;
-#pragma link C++ function Qn::ToBootstrapScatterGraph;
-#pragma link C++ function Qn::ToErrorComparisionGraph;
-#pragma link C++ function Qn::ToTMultiGraph;
-#pragma link C++ function Qn::Sqrt < DataContainer < Qn::Stats>>;
-#pragma link C++ function Qn::Abs < DataContainer < Qn::Stats>>;
+
 
 #endif

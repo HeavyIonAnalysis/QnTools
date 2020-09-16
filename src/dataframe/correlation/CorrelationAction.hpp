@@ -33,6 +33,9 @@
 #include "QVector.hpp"
 #include "TemplateHelpers.hpp"
 
+#include "Stat.hpp"
+#include "StatCollect.hpp"
+
 namespace Qn::Correlation {
 
 /**
@@ -62,13 +65,13 @@ class CorrelationActionBase {
    * evaluation of the event loop.
    * @return returns const reference.
    */
-  [[nodiscard]] const Qn::DataContainerStats &GetDataContainer() const {
+  [[nodiscard]] const Qn::DataContainerStatCollect &GetDataContainer() const {
     return correlation_;
   }
 
  protected:
   std::string action_name_;             /// Name of the action
-  Qn::DataContainerStats correlation_;  /// Result data container.
+  Qn::DataContainerStatCollect correlation_;  /// Result data container.
 };
 
 /**
@@ -113,7 +116,7 @@ class CorrelationAction<Function, std::tuple<InputDataContainers...>,
   CorrelationAction(
       std::string_view correlation_name, Function function,
       const std::array<std::string, NumberOfInputs> &input_names,
-      const std::array<Qn::Stats::Weights, NumberOfInputs> &weights,
+      const std::array<Qn::Stat::WeightType, NumberOfInputs> &weights,
       AxesConfig event_axes, unsigned int n_samples)
       : CorrelationActionBase(correlation_name),
         n_samples_(n_samples),
@@ -121,8 +124,8 @@ class CorrelationAction<Function, std::tuple<InputDataContainers...>,
         event_axes_(event_axes),
         function_(function) {
     std::transform(std::begin(weights), std::end(weights),
-                   std::begin(use_weights_), [](Qn::Stats::Weights weight) {
-                     return weight == Qn::Stats::Weights::OBSERVABLE;
+                     std::begin(use_weights_), [](Qn::Stat::WeightType weight) {
+                     return weight == Qn::Stat::WeightType::OBSERVABLE;
                    });
   }
 
@@ -176,11 +179,11 @@ class CorrelationAction<Function, std::tuple<InputDataContainers...>,
     }
     stride_ = correlation_.size() / event_axes_.GetSize();
     for (auto &bin : correlation_) {
-      bin.SetNumberOfReSamples(n_samples_);
+      bin.SetNumberOfSamples(n_samples_);
       if (IsObservable())
-        bin.SetWeights(Qn::Stats::Weights::OBSERVABLE);
+        bin.SetWeightType(Qn::Stat::WeightType::OBSERVABLE);
       else
-        bin.SetWeights(Qn::Stats::Weights::REFERENCE);
+        bin.SetWeightType(Qn::Stat::WeightType::REFERENCE);
     }
   }
 
@@ -381,7 +384,7 @@ auto MakeCorrelationAction(
     const std::array<std::string,
                      TemplateHelpers::FunctionTraits<Function>::Arity>
         input_names,
-    const std::array<Qn::Stats::Weights,
+    const std::array<Qn::Stat::WeightType,
                      TemplateHelpers::FunctionTraits<Function>::Arity>
         weights,
     AxesConfig event_axes, unsigned int n_samples) {
