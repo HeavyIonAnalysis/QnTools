@@ -24,6 +24,7 @@
 #include "QVectorNormalizationHelper.hpp"
 // correction step
 #include "RecenterAction.hpp"
+#include "RecenterVector.hpp"
 // correlation step
 #include "CorrelationAction.hpp"
 #include "CorrelationFunctions.hpp"

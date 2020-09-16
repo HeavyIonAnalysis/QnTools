@@ -21,6 +21,7 @@
 #include <string>
 #include <tuple>
 #include <vector>
+#include <mutex>
 
 #include <ROOT/RDF/ActionHelpers.hxx>
 #include <ROOT/RResultPtr.hxx>
@@ -46,6 +47,7 @@ class AverageHelper : public RActionImpl<AverageHelper<Action>> {
   using InitializationObject = typename Action::InitializationObject;
 
  private:
+  mutable std::mutex mutex_;
   std::vector<bool> is_configured_;  /// flag for tracking if the helper has
                                      /// been configured using the input data.
   std::vector<std::shared_ptr<Action>> results_;  /// vector of results.
@@ -69,6 +71,34 @@ class AverageHelper : public RActionImpl<AverageHelper<Action>> {
       is_configured_.push_back(false);
       results_.emplace_back(std::make_shared<Action>(action));
     }
+  }
+
+  /**
+   * Copy constructor
+   * @param other
+   */
+  AverageHelper(AverageHelper const &other) {
+    std::unique_lock<std::mutex> lock_other(other.mutex_);
+    is_configured_ = other.is_configured_;
+    results_ = other.results_;
+    external_reader_ = other.external_reader_;
+    initialization_object_ = other.initialization_object_;
+  }
+
+  /**
+   * Copy asignment operator
+   * @param other
+   */
+  AverageHelper& operator=(AverageHelper const &other) {
+    if (&other!= this) {
+      std::unique_lock<std::mutex> lock_this(this->mutex_);
+      std::unique_lock<std::mutex> lock_other(other.mutex_);
+      is_configured_ = other.is_configured_;
+      results_ = other.results_;
+      external_reader_ = other.external_reader_;
+      initialization_object_ = other.initialization_object_;
+    }
+    return *this;
   }
 
   /**
@@ -156,6 +186,7 @@ class AverageHelper : public RActionImpl<AverageHelper<Action>> {
    * @param reader
    */
   void InitTask(TTreeReader *reader, unsigned int slot) {
+    const std::lock_guard lock(mutex_);
     if (!is_configured_[slot]) {
       if (initialization_object_) {
         results_[slot]->Initialize(*initialization_object_);

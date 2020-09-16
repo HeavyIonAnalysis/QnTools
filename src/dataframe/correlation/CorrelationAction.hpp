@@ -81,7 +81,8 @@ class CorrelationActionBase {
  * @tparam AxesConfig
  * @tparam EventParameters
  */
-template <typename Function, typename InputDataContainers, typename AxesConfig,
+template <typename Function, typename WeightFunction,
+          typename InputDataContainers, typename AxesConfig,
           typename EventParameters>
 class CorrelationAction;
 
@@ -92,10 +93,12 @@ class CorrelationAction;
  * @tparam AxesConfig
  * @tparam EventParameters
  */
-template <typename Function, typename... InputDataContainers,
-          typename AxesConfig, typename... EventParameters>
-class CorrelationAction<Function, std::tuple<InputDataContainers...>,
-                        AxesConfig, std::tuple<EventParameters...>>
+template <typename Function, typename WeightFunction,
+          typename... InputDataContainers, typename AxesConfig,
+          typename... EventParameters>
+class CorrelationAction<Function, WeightFunction,
+                        std::tuple<InputDataContainers...>, AxesConfig,
+                        std::tuple<EventParameters...>>
     : public CorrelationActionBase {
  private:
   constexpr static std::size_t NumberOfInputs = sizeof...(InputDataContainers);
@@ -113,21 +116,17 @@ class CorrelationAction<Function, std::tuple<InputDataContainers...>,
    * @param event_axes Event axes for the binning of the correlation.
    * @param n_samples Number of samples used for the bootstrapping
    */
-  CorrelationAction(
-      std::string_view correlation_name, Function function,
-      const std::array<std::string, NumberOfInputs> &input_names,
-      const std::array<Qn::Stat::WeightType, NumberOfInputs> &weights,
-      AxesConfig event_axes, unsigned int n_samples)
+  CorrelationAction(std::string_view correlation_name, Function function,
+                    WeightFunction weight_function, bool use_weights,
+                    const std::array<std::string, NumberOfInputs> &input_names,
+                    AxesConfig event_axes, unsigned int n_samples)
       : CorrelationActionBase(correlation_name),
         n_samples_(n_samples),
         input_names_(input_names),
         event_axes_(event_axes),
-        function_(function) {
-    std::transform(std::begin(weights), std::end(weights),
-                     std::begin(use_weights_), [](Qn::Stat::WeightType weight) {
-                     return weight == Qn::Stat::WeightType::OBSERVABLE;
-                   });
-  }
+        function_(function),
+        weight_function_(weight_function),
+        use_weights_(use_weights) {}
 
  private:
   friend class AverageHelper<CorrelationAction>;  /// Helper friend
@@ -135,11 +134,11 @@ class CorrelationAction<Function, std::tuple<InputDataContainers...>,
   unsigned int stride_ = 1;     /// Offset of due to the non-event axes.
   unsigned int n_samples_ = 1;  /// Number of samples used in the ReSampler.
   std::array<std::string, NumberOfInputs>
-      input_names_;  /// Names of the input Qvectors.
-  std::array<bool, NumberOfInputs>
-      use_weights_;        /// Array to track which weight is being used.
-  AxesConfig event_axes_;  /// Configuration of the event axes.
-  Function function_;      /// correlation function.
+      input_names_;                 /// Names of the input Qvectors.
+  AxesConfig event_axes_;           /// Configuration of the event axes.
+  Function function_;               /// correlation function.
+  WeightFunction weight_function_;  /// weight function.
+  bool use_weights_;
 
   /**
    * Returns the name of the columns used in the correction step. This includes
@@ -162,10 +161,7 @@ class CorrelationAction<Function, std::tuple<InputDataContainers...>,
    * Checks if at least one Q-vector is not a reference Q-vector.
    * @return true if at least one of them is not a reference Q-vector.
    */
-  [[nodiscard]] inline bool IsObservable() const {
-    return std::any_of(std::begin(use_weights_), std::end(use_weights_),
-                       [](bool a) { return a; });
-  }
+  [[nodiscard]] inline bool IsObservable() const { return use_weights_; }
 
   /**
    * Initializes the CorrelationAction using the initialization object.
@@ -184,6 +180,36 @@ class CorrelationAction<Function, std::tuple<InputDataContainers...>,
         bin.SetWeightType(Qn::Stat::WeightType::OBSERVABLE);
       else
         bin.SetWeightType(Qn::Stat::WeightType::REFERENCE);
+    }
+  }
+
+  void TryNextEventInReader(TTreeReader &reader,
+                            std::vector<TTreeReaderValue<DataContainerQVector>> input_data,
+                            Long64_t i_event,
+                            Long64_t n_events) {
+    using namespace std::literals::string_literals;
+    if (i_event > n_events) {
+      throw std::out_of_range("ERROR: Tried 10% of the events."
+                              "Could not find a good event to initialize."
+                              "Try to initialize using the InitializationObject.");
+    }
+    try {
+      reader.Next();
+      std::vector<Qn::DataContainerQVector> initialization_object;
+      // Move valid entries to the initialization Object
+      std::transform(std::begin(input_data), std::end(input_data),
+                     std::back_inserter(initialization_object),
+                     [](auto &reader_value) {
+                       if (reader_value.GetSetupStatus() < 0)
+                         throw std::runtime_error("Q-Vector branch "s +
+                             reader_value.GetBranchName() +
+                             " not found.");
+                       else
+                         return *reader_value;
+                     });
+      Initialize(initialization_object);
+    } catch (std::out_of_range &) {
+      TryNextEventInReader(reader, input_data, i_event+1, n_events);
     }
   }
 
@@ -218,7 +244,11 @@ class CorrelationAction<Function, std::tuple<InputDataContainers...>,
                        return *reader_value;
                    });
     // Initialize
-    Initialize(initialization_object);
+    try {
+      Initialize(initialization_object);
+    } catch (std::out_of_range&) {
+      TryNextEventInReader(reader, input_data, 0, 0.1*reader.GetEntries());
+    }
   }
 
   /**
@@ -284,22 +314,6 @@ class CorrelationAction<Function, std::tuple<InputDataContainers...>,
   }
 
   /**
-   * Calculates the total weight of the Q-Vector going into the correlation.
-   * @param q_array Array of Q-vectors.
-   * @return Weight of the correlation result for this event.
-   */
-  double CalculateWeight(
-      const std::array<const Qn::QVector *, NumberOfInputs> &q_array) const {
-    int i = 0;
-    double weight = 1.0;
-    for (const auto &q : q_array) {
-      if (use_weights_[i]) weight *= q->sumweights();
-      ++i;
-    }
-    return weight;
-  }
-
-  /**
    * Loops recursivly over all bins of the correlation result.
    * @param out_bin Initial offset based on the current event parameters.
    * @param q_array Holder for the Q-vectors entering the calculation of the
@@ -319,8 +333,9 @@ class CorrelationAction<Function, std::tuple<InputDataContainers...>,
           continue;
         }
         q_array[step] = &bin;
-        correlation_[out_bin].Fill(TemplateHelpers::Call(function_, q_array),
-                                   CalculateWeight(q_array), sample_ids);
+        correlation_[out_bin].Fill(
+            TemplateHelpers::Call(function_, q_array),
+            TemplateHelpers::Call(weight_function_, q_array), sample_ids);
         ++out_bin;
       }
     } else {  /// recursion
@@ -365,6 +380,11 @@ class CorrelationAction<Function, std::tuple<InputDataContainers...>,
   }
 };
 
+using namespace TemplateHelpers;
+enum class UseWeights {
+  Yes,
+  No
+};
 /**
  * Helper function to create a correlation without specifying the template
  * parameters directly.
@@ -378,23 +398,20 @@ class CorrelationAction<Function, std::tuple<InputDataContainers...>,
  * @param n_samples Number of samples used in the Resampling step.
  * @return result of the correlation.
  */
-template <typename Function, typename AxesConfig>
+template <typename Function, typename WeightFunction, typename AxesConfig>
 auto MakeCorrelationAction(
     std::string_view correlation_name, Function function,
-    const std::array<std::string,
-                     TemplateHelpers::FunctionTraits<Function>::Arity>
-        input_names,
-    const std::array<Qn::Stat::WeightType,
-                     TemplateHelpers::FunctionTraits<Function>::Arity>
-        weights,
+    WeightFunction weight_function, UseWeights use_weights,
+    const std::array<std::string, FunctionTraits<Function>::Arity> input_names,
     AxesConfig event_axes, unsigned int n_samples) {
   using DataContainerTuple =
-      TemplateHelpers::TupleOf<TemplateHelpers::FunctionTraits<Function>::Arity,
-                               Qn::DataContainerQVector>;
+      TupleOf<FunctionTraits<Function>::Arity, Qn::DataContainerQVector>;
   using EventParameterTuple = typename AxesConfig::AxisValueTypeTuple;
-  return CorrelationAction<Function, DataContainerTuple, AxesConfig,
-                           EventParameterTuple>(
-      correlation_name, function, input_names, weights, event_axes, n_samples);
+  bool usew = use_weights==UseWeights::Yes ? true : false;
+  return CorrelationAction<Function, WeightFunction, DataContainerTuple,
+                           AxesConfig, EventParameterTuple>(
+      correlation_name, function, weight_function, usew, input_names,
+      event_axes, n_samples);
 }
 
 }  // namespace Qn::Correlation

@@ -21,6 +21,7 @@
 #include "AxesConfiguration.hpp"
 #include "CorrelationAction.hpp"
 #include "ReSampleHelper.hpp"
+#include "CorrelationFunctions.hpp"
 
 /**
  * Basic test of the correlation
@@ -61,9 +62,10 @@ TEST(CorrelationAction, BasicIntegratedQ) {
   auto dfs = Qn::Correlation::Resample(df1, 10);
 
   auto f_test = [](const Qn::QVector &a) { return a.x(1) + a.y(1); };
+  auto f_weight = [](const Qn::QVector &a) { return a.sumweights()*(a.sumweights()-1); };
   std::vector<Qn::DataContainerQVector> initialization{q};
   auto correlation = Qn::Correlation::MakeCorrelationAction(
-      "test", f_test, {"q"}, {Qn::Stat::WeightType::OBSERVABLE}, event_axes, 0);
+      "test", f_test, f_weight, Qn::Correlation::UseWeights::Yes, {"q"}, event_axes, 0);
   auto avg = Qn::MakeAverageHelper(correlation);
   auto res = avg.SetInitializationWithInitializationObject(&initialization)
                  .BookMe(dfs);
@@ -71,4 +73,20 @@ TEST(CorrelationAction, BasicIntegratedQ) {
   EXPECT_NEAR(data_container.At(0).GetStatistics().Mean(), 0.70710678, 1e-5);
   EXPECT_EQ(data_container.At(0).GetStatistics().N(), 91);
   EXPECT_EQ(data_container.At(1).GetStatistics().N(), 9);
+
+
+  Qn::QVector p;
+  Qn::QVector r;
+  r.ActivateHarmonic(2);
+  r.InitializeHarmonics();
+  p.ActivateHarmonic(2);
+  p.InitializeHarmonics();
+
+  p.Add(0.7,1.);
+  p.Add(0.8,1.);
+  r.Add(0.5,1.);
+  r.Add(0.6,1.);
+
+  auto func = Qn::Correlation::TwoParticle::d2(2);
+  auto result = func(p,r);
 }

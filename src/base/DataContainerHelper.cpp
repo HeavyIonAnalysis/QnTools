@@ -15,23 +15,27 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#include "DataContainerHelper.hpp"
+
 #include <iostream>
 #include <iterator>
 
 #include "DataContainer.hpp"
-#include "DataContainerHelper.hpp"
 #include "TCanvas.h"
 #include "TFrame.h"
 #include "TGaxis.h"
 #include "TGraphAsymmErrors.h"
 #include "TText.h"
+#include "TH2.h"
 
 namespace Qn {
 
 TGraphErrors *DataContainerHelper::ToTGraph(const Qn::DataContainer<Statistics, AxisD> &data, DrawErrors drawerrors) {
   if (data.GetAxes().size() > 1) {
     std::cout << "Data container has more than one dimension. " << std::endl;
-    std::cout << "Cannot draw as Graph. Use Projection() to make it one dimensional." << std::endl;
+    std::cout
+        << "Cannot draw as Graph. Use Projection() to make it one dimensional."
+        << std::endl;
     return nullptr;
   }
   auto graph = new TGraphErrors();
@@ -57,7 +61,9 @@ TGraphErrors *DataContainerHelper::ToTGraph(const Qn::DataContainer<Statistics, 
 TGraphErrors *DataContainerHelper::ToTGraph(const DataContainerStatCollect &data, DrawErrors drawerrors) {
   if (data.GetAxes().size() > 1) {
     std::cout << "Data container has more than one dimension. " << std::endl;
-    std::cout << "Cannot draw as Graph. Use Projection() to make it one dimensional." << std::endl;
+    std::cout
+        << "Cannot draw as Graph. Use Projection() to make it one dimensional."
+        << std::endl;
     return nullptr;
   }
   auto graph = new TGraphErrors();
@@ -114,7 +120,8 @@ void DataContainerHelper::Browse(DataContainerStatistic *data, TBrowser *b) {
   for (auto &axis : data->axes_) {
     TGraphErrors *graph;
     if (data->dimension_ > 1) {
-      graph = DataContainerHelper::ToTGraph(data->Projection({axis.Name()}), Errors::Yonly);
+      graph = DataContainerHelper::ToTGraph(data->Projection({axis.Name()}),
+                                            Errors::Yonly);
     } else {
       graph = DataContainerHelper::ToTGraph(*data, Errors::Yonly);
     }
@@ -123,6 +130,35 @@ void DataContainerHelper::Browse(DataContainerStatistic *data, TBrowser *b) {
     graph->GetXaxis()->SetTitle(axis.Name().data());
     auto *drawable = new DrawErrorGraph(graph);
     data->list_->Add(drawable);
+  }
+  if (data->dimension_ > 1) {
+    auto list2d = new TList();
+    for (auto iaxis = std::begin(data->axes_); iaxis < std::end(data->axes_);
+         ++iaxis) {
+      for (auto jaxis = std::begin(data->axes_); jaxis < std::end(data->axes_);
+           ++jaxis) {
+        if (iaxis != jaxis) {
+          auto proj = data->Projection({iaxis->Name(), jaxis->Name()});
+          auto axes = proj.GetAxes();
+          auto axis1 = axes.at(0);
+          auto axis2 = axes.at(1);
+          auto name = (jaxis->Name() + ":" + iaxis->Name());
+          auto histo2d = new TH2F(
+              name.c_str(), name.c_str(), axis1.size(), axis1.GetFirstBinEdge(),
+              axis1.GetLastBinEdge(), axis2.size(), axis2.GetFirstBinEdge(),
+              axis2.GetLastBinEdge());
+          for (int i = 0; i < proj.size(); ++i) {
+            auto value = proj.At(i).Mean();
+            auto bins = proj.GetIndex(i);
+            histo2d->SetBinContent(bins[0]+1, bins[1]+1, value);
+          }
+          list2d->Add(histo2d);
+        }
+      }
+    }
+    list2d->SetName("2D");
+    list2d->SetOwner(true);
+    data->list_->Add(list2d);
   }
   for (int i = 0; i < data->list_->GetSize(); ++i) {
     b->Add(data->list_->At(i));
@@ -136,7 +172,8 @@ void DataContainerHelper::Browse(DataContainerStatCalculate *data, TBrowser *b) 
   for (auto &axis : data->axes_) {
     TGraphErrors *graph;
     if (data->dimension_ > 1) {
-      graph = DataContainerHelper::ToTGraph(data->Projection({axis.Name()}), Errors::Yonly);
+      graph = DataContainerHelper::ToTGraph(data->Projection({axis.Name()}),
+                                            Errors::Yonly);
     } else {
       graph = DataContainerHelper::ToTGraph(*data, Errors::Yonly);
     }

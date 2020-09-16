@@ -18,12 +18,9 @@
 #define QNTOOLS_CORRELATIONFUNCTIONS_H_
 
 #include <cmath>
+#include <complex>
 
-namespace Qn::Correlation {
-/**
- * Two particle correlation functions
- */
-namespace TwoParticle {
+namespace Qn::Correlation::TwoParticle {
 inline auto xx(unsigned int h_a, unsigned int h_b) {
   return [h_a, h_b](const Qn::QVector &a, const Qn::QVector &b) {
     return a.x(h_a) * b.x(h_b);
@@ -49,7 +46,8 @@ inline auto ScalarProduct(unsigned int h_u, unsigned int h_Q) {
     return u.x(h_u) * Q.x(h_Q) + u.y(h_u) * Q.y(h_Q);
   };
 }
-inline auto Cumulant(unsigned int h_u) {
+
+inline auto c2(unsigned int h_u) {
   return [h_u](const Qn::QVector &u) {
     double ret = 0.;
     auto m = u.sumweights();
@@ -62,12 +60,46 @@ inline auto Cumulant(unsigned int h_u) {
     return ret;
   };
 }
-}  // namespace TwoParticle
+
+inline auto d2(unsigned int h_u) {
+  return [h_u](const Qn::QVector &p, const Qn::QVector &r) {
+    double ret = 0.;
+    auto m = p.sumweights();
+    if (m < 2.) {
+      return ret = NAN;
+    } else {
+      auto P = p.DeNormal();
+      auto R = r.DeNormal();
+      std::complex<double> p0{P.sumweights(), 0};
+      std::complex<double> r0{R.sumweights(), 0};
+      std::complex<double> p1{P.x(h_u), P.y(h_u)};
+      std::complex<double> r1{R.x(h_u), R.y(h_u)};
+      return (p1 * std::conj(r1) - p0).real() / (p0*r0 - p0).real();
+    }
+  };
+}
+
+inline auto n2() {
+  return [](const Qn::QVector &q) {
+    auto m = q.sumweights();
+    return m * (m - 1);
+  };
+}
+
+inline auto nd2() {
+  return [](const Qn::QVector &p, const Qn::QVector &r) {
+    auto mp = p.sumweights();
+    auto mr = r.sumweights();
+    return mp * mr - mp;
+  };
+}
+
+}  // namespace Qn::Correlation::TwoParticle
 
 /**
  * Four particle correlation functions
  */
-namespace FourParticle {
+namespace Qn::Correlation::FourParticle {
 
 inline auto xxx(unsigned int h_a, unsigned int h_b, unsigned int h_c) {
   return [h_a, h_b, h_c](const Qn::QVector &u, const Qn::QVector &Qb,
@@ -118,7 +150,51 @@ inline auto xxy(unsigned int h_a, unsigned int h_b, unsigned int h_c) {
   };
 }
 
-inline auto Cumulant(unsigned int h_u) {
+inline auto n4() {
+  return [](const Qn::QVector &q) {
+    auto m = q.sumweights();
+    return m * (m - 1.) * (m - 2.) * (m - 3.);
+  };
+}
+
+inline auto nd4() {
+  return [](const Qn::QVector &p, const Qn::QVector &r) {
+    auto mp = p.sumweights();
+    auto mr = r.sumweights();
+    return (mp * mr - 3. * mp) * (mr - 1.) * (mr - 2.);
+  };
+}
+
+inline auto d4(unsigned int h_u) {
+  return [h_u](const Qn::QVector &p, const Qn::QVector &r) {
+    auto R = r.DeNormal();
+    auto RM = r.sumweights();
+    auto P = p.DeNormal();
+    auto PM = p.sumweights();
+    auto Q = p.DeNormal();
+    auto QM = p.sumweights();
+    if (PM < 4.) {
+      double ret = NAN;
+      return ret;
+    }
+    std::complex<double> r0{RM, 0.};
+    std::complex<double> q0{QM, 0.};
+    std::complex<double> p1{P.x(h_u), P.y(h_u)};
+    std::complex<double> r1{R.x(h_u), R.y(h_u)};
+    std::complex<double> r2{R.x(2 * h_u), R.y(2 * h_u)};
+    std::complex<double> q1{P.x(h_u), P.y(h_u)};
+    std::complex<double> q2{P.x(2 * h_u), P.y(2 * h_u)};
+
+    auto c4 = p1 * r1 * std::conj(r1) * std::conj(r1) -
+              q2 * std::conj(r1) * std::conj(r1) - p1 * r1 * std::conj(r2) -
+              2. * r1 * q0 * std::conj(r1) - 2. * p1 * r0 * std::conj(r1) +
+              4. * q1 * std::conj(r1) + 2. * r0 * q0 + 2. * r1 * std::conj(q1) +
+              2. * p1 * std::conj(r1) + q2 * std::conj(r2) - 6. * q0;
+    return c4.real() / ((q0 * r0 - 3. * q0) * (r0 - 1.) * (r0 - 2.)).real();
+  };
+};
+
+inline auto c4(unsigned int h_u) {
   return [h_u](const Qn::QVector &u) {
     float ret = 0.;
     auto Q = u.DeNormal();
@@ -143,7 +219,6 @@ inline auto Cumulant(unsigned int h_u) {
     return ret;
   };
 }
-}  // namespace FourParticle
 
-}  // namespace Qn::Correlation
+}  // namespace Qn::Correlation::FourParticle
 #endif  // QNTOOLS_CORRELATIONFUNCTIONS_H_

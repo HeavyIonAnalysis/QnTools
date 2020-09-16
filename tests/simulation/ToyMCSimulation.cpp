@@ -245,9 +245,11 @@ std::map<std::string, ROOT::RDF::RResultPtr<Qn::Correlation::CorrelationActionBa
 for (const auto &detector : detector_names_trk) {
 std::array<std::string, 1> inputs{detector};
 std::string correlation_name{"v22"};
+auto f_weight = [](const Qn::QVector &a) { return a.sumweights()*(a.sumweights()-1); };
 auto c22 = Qn::MakeAverageHelper(Qn::Correlation::MakeCorrelationAction(correlation_name + detector,
-                                                                        Qn::Correlation::TwoParticle::Cumulant(2),
-                                                                        inputs, {kObs}, event_axes, n_samples))
+                                                                        Qn::Correlation::TwoParticle::c2(2),
+                                                                        f_weight,Qn::Correlation::UseWeights::Yes,
+                                                                        inputs, event_axes, n_samples))
     .BookMe(dfs);
 correlations.emplace(detector + "_" + correlation_name, c22);
 }
