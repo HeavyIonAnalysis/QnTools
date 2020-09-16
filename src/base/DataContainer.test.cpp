@@ -252,6 +252,7 @@ TEST_F(DataContainerUnitTest, ErrorAfterMultiplicationAndRebin) {
   canvas->SaveAs("ErrorsAfterRebin.png");
   auto file = new TFile("test.root", "RECREATE");
   rebin.Write("test");
+  stats_all.Write("test2");
   file->Close();
 }
 

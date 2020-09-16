@@ -52,7 +52,7 @@ class StatCollectUnitTest : public ::testing::Test {
   Qn::StatCollect stat2_;
   Qn::StatCollect statempty_;
   Qn::StatCollect statsum_;
-  long nevents_ = 1000;
+  long nevents_ = 100000;
   int nsamples_ = 100;
 };
 
@@ -69,7 +69,13 @@ TEST_F(StatCollectUnitTest, Filling) {
   Statistics bs_stat;
   for (int i = 0; i < means.size(); ++i) { bs_stat.Fill(means[i], weights[i]); }
   EXPECT_NEAR(std::sqrt(bs_stat.Variance()), 0.5/std::sqrt(nevents_), 0.5/std::sqrt(nevents_)*0.10);
+  auto tdigest = statsum_.GetTDigest();
+  auto median = tdigest.quantile(0.5);
+  auto high = tdigest.quantile(0.841);
+  auto low = tdigest.quantile(0.159);
+  auto sigma = (high - low) / 2;
 }
+
 
 TEST_F(StatCollectUnitTest, StatBinMerging) {
   using namespace Qn;

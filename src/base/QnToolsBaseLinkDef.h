@@ -30,6 +30,8 @@
 #pragma link C++ class Qn::QVector + ;
 #pragma link C++ class Qn::Statistics + ;
 #pragma link C++ class Qn::BootStrap + ;
+#pragma link C++ class Qn::TDigestDetails::Centroid + ;
+#pragma link C++ class Qn::TDigest + ;
 #pragma link C++ class Qn::Stat + ;
 #pragma link C++ class Qn::StatCollect + ;
 #pragma link C++ class Qn::StatCalculate + ;
