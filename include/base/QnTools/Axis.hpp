@@ -138,7 +138,9 @@ class Axis {
       bin = -1;
     } else {
       auto lb = std::lower_bound(bin_edges_.begin(), bin_edges_.end(), value);
-      if (lb == bin_edges_.begin() || *lb == value)
+      if (lb == bin_edges_.end()) {
+        bin = -1;
+      } else if (lb == bin_edges_.begin() || *lb == value)
         bin = (lb - bin_edges_.begin());
       else
         bin = (lb - bin_edges_.begin()) - 1;
