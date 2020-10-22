@@ -22,6 +22,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <set>
 
 #include "Axis.hpp"
 #include "DataContainerHelper.hpp"
