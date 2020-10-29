@@ -208,7 +208,7 @@ TEST_F(StatCalculateUnitTest, Scaling) {
   auto scale2 = (1./2) * statsum_;
   auto scale3 = statsum_ / 2;
   auto man_scale = statsum_.Mean() / 2;
-  auto man_scale_v =   statsum_.Variance() / 4.;
+  auto man_scale_v =  statsum_.Variance() / 4.;
   EXPECT_FLOAT_EQ(scale1.Mean(), scale2.Mean());
   EXPECT_FLOAT_EQ(scale1.Mean(), scale3.Mean());
   EXPECT_FLOAT_EQ(scale1.Mean(), man_scale);

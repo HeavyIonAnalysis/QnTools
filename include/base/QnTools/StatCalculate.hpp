@@ -31,6 +31,7 @@ namespace Qn {
 class StatCalculate : public Stat {
  public:
 
+  static StatCalculate PreferObservable(const StatCalculate &lhs, const StatCalculate &rhs);
   /// Default constructor.
   StatCalculate() = default;
 
@@ -50,7 +51,11 @@ class StatCalculate : public Stat {
     }
   }
 
-  virtual ~StatCalculate() = default;
+  /// Construct StatCalculate from two Stats, prefering OBSERVABLE or REFERENCE.
+  StatCalculate(const StatCalculate &lhs, const StatCalculate &rhs) :
+    StatCalculate(PreferObservable(lhs, rhs)) {}
+
+  virtual ~StatCalculate();
 
   /// Returns the sample Variance from error propagation
   [[nodiscard]] double VarianceFromPropagation() const { return variance_; }
@@ -147,11 +152,8 @@ class StatCalculate : public Stat {
   double sum_weight_ = 0.; /// sum of weights
   double sum_weight2_ = 0.; /// sum of {weights}^{2}
 
-  void CopySettings(const StatCalculate &other);
-  void CopySettings(const StatCalculate &lhs, const StatCalculate &rhs);
-
   /// \cond CLASSIMP
- ClassDef(StatCalculate, 2);
+ ClassDef(StatCalculate, 3);
   /// \endcond
 };
 
