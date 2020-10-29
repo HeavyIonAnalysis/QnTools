@@ -20,6 +20,11 @@
 namespace Qn {
 
 /**
+ * Default constructor
+ */
+StatCalculate::~StatCalculate() = default;
+
+/**
  * Merges two StatBins. Returns the variance and mean from the pooled sample.
  * The sum of weights and sum of weights^2 are seperately accumulated to be able
  * to calculate the effective number of events, which is required to calculate
@@ -78,15 +83,14 @@ StatCalculate Merge(const StatCalculate &lhs, const StatCalculate &rhs) {
  * @return left operand + right operand
  */
 StatCalculate operator+(const StatCalculate &lhs, const StatCalculate &rhs) {
-  StatCalculate sum;
+  StatCalculate sum(lhs, rhs);
   // mean and variance
-  sum.CopySettings(lhs, rhs);
   sum.mean_ = lhs.Mean() + rhs.Mean();
   sum.variance_ = lhs.Variance() + rhs.Variance();
   // Bootstrap samples
   for (int i = 0; i < lhs.sample_means_.size(); ++i) {
-    sum.sample_weights_.push_back(lhs.sample_weights_[i]);
-    sum.sample_means_.push_back(lhs.sample_means_[i] + rhs.sample_means_[i]);
+    sum.sample_weights_[i] = lhs.sample_weights_[i];
+    sum.sample_means_[i] = lhs.sample_means_[i] + rhs.sample_means_[i];
   }
   return sum;
 }
@@ -98,15 +102,14 @@ StatCalculate operator+(const StatCalculate &lhs, const StatCalculate &rhs) {
  * @return left operand - right operand
  */
 StatCalculate operator-(const StatCalculate &lhs, const StatCalculate &rhs) {
-  StatCalculate difference;
+  StatCalculate difference(lhs, rhs);
   // mean and variance
-  difference.CopySettings(lhs, rhs);
   difference.mean_ = lhs.Mean() - rhs.Mean();
   difference.variance_ = lhs.Variance() + rhs.Variance();
   // Bootstrap samples
   for (int i = 0; i < lhs.sample_means_.size(); ++i) {
-    difference.sample_weights_.push_back(lhs.sample_weights_[i]);
-    difference.sample_means_.push_back(lhs.sample_means_[i] - rhs.sample_means_[i]);
+    difference.sample_weights_[i] = lhs.sample_weights_[i];
+    difference.sample_means_[i] = lhs.sample_means_[i] - rhs.sample_means_[i];
   }
   return difference;
 }
@@ -118,16 +121,15 @@ StatCalculate operator-(const StatCalculate &lhs, const StatCalculate &rhs) {
  * @return left operand * right operand
  */
 StatCalculate operator*(const StatCalculate &lhs, const StatCalculate &rhs) {
-  StatCalculate product;
+  StatCalculate product(lhs, rhs);
   // mean and variance
-  product.CopySettings(lhs, rhs);
   product.mean_ = lhs.Mean() * rhs.Mean();
   product.variance_ =   lhs.Variance() * rhs.Mean() * rhs.Mean()
       + rhs.Variance() * lhs.Mean() * lhs.Mean();
   // Bootstrap samples
   for (int i = 0; i < lhs.sample_means_.size(); ++i) {
-    product.sample_weights_.push_back(lhs.sample_weights_[i]);
-    product.sample_means_.push_back(lhs.sample_means_[i] * rhs.sample_means_[i]);
+    product.sample_weights_[i] = lhs.sample_weights_[i];
+    product.sample_means_[i] = lhs.sample_means_[i] * rhs.sample_means_[i];
   }
   return product;
 }
@@ -139,16 +141,15 @@ StatCalculate operator*(const StatCalculate &lhs, const StatCalculate &rhs) {
  * @return numerator / denominator
  */
 StatCalculate operator/(const StatCalculate &num, const StatCalculate &den) {
-  StatCalculate ratio;
+  StatCalculate ratio(num, den);
   // mean and variance
-  ratio.CopySettings(num, den);
   ratio.mean_ = num.Mean() / den.Mean();
   ratio.variance_ =   num.Variance() / (den.Mean() * den.Mean())
       + num.Mean() * num.Mean() * den.Variance() / std::pow(den.Mean(), 4);
   // Bootstrap samples
   for (int i = 0; i < num.sample_means_.size(); ++i) {
-    ratio.sample_weights_.push_back(num.sample_weights_[i]);
-    ratio.sample_means_.push_back(num.sample_means_[i] / den.sample_means_[i]);
+    ratio.sample_weights_[i] = num.sample_weights_[i];
+    ratio.sample_means_[i] = num.sample_means_[i] / den.sample_means_[i];
   }
   return ratio;
 }
@@ -166,8 +167,8 @@ StatCalculate operator*(const StatCalculate &operand, double scale) {
   scaled.variance_ = operand.Variance() * scale * scale;
   // Bootstrap samples
   for (int i = 0; i < operand.sample_means_.size(); ++i) {
-    scaled.sample_weights_.push_back(operand.sample_weights_[i]);
-    scaled.sample_means_.push_back(operand.sample_means_[i] * scale);
+    scaled.sample_weights_[i] = operand.sample_weights_[i];
+    scaled.sample_means_[i] = operand.sample_means_[i] * scale;
   }
   return scaled;
 }
@@ -208,8 +209,8 @@ StatCalculate Pow(const StatCalculate &base, double exp) {
       * base.Variance();
   // Bootstrap samples
   for (int i = 0; i < base.sample_means_.size(); ++i) {
-    result.sample_weights_.push_back(base.sample_weights_[i]);
-    result.sample_means_.push_back(std::pow(base.sample_means_[i],exp));
+    result.sample_weights_[i] = base.sample_weights_[i];
+    result.sample_means_[i] = std::pow(base.sample_means_[i],exp);
   }
   return result;
 }
@@ -223,31 +224,20 @@ StatCalculate Sqrt(const StatCalculate &operand) {
   return Pow(operand,(1./2));
 }
 
+
 /**
- * Copies settings from one of two StatBins.
- * If Prefers OBSERVABLE over REFERENCE and left over right
- * Chooses sum of weights and sum of weights^2.
- * @param lhs left StatCalculate
- * @param rhs right StatCalculate
+ * Returns OBSERVABLE type StatCalculate
+ * @param lhs left candidate
+ * @param rhs right candidate
+ * @return returns OBSERVABLE type StatCalculate prefers lhs over rhs in case none is found.
  */
-void StatCalculate::CopySettings(const StatCalculate &lhs, const StatCalculate &rhs) {
+StatCalculate StatCalculate::PreferObservable(const StatCalculate &lhs, const StatCalculate &rhs) {
   if ( rhs.GetWeightType() == StatCalculate::WeightType::OBSERVABLE) {
-    CopySettings(rhs);
+    return rhs;
   } else {
-    CopySettings(lhs);
+    return lhs;
   }
 }
 
-/**
- * Copies the settings of one StatCalculate to the other.
- * It preserves sum of weights and sum of weights^2.
- * @param other other StatCalculate
- */
-void StatCalculate::CopySettings(const StatCalculate &other) {
-  type_of_weight_ = other.GetWeightType();
-  type_of_error_ = other.GetErrorType();
-  sum_weight_ = other.SumWeights();
-  sum_weight2_ = other.SumWeights2();
-}
 
 }
