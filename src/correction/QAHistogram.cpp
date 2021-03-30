@@ -37,6 +37,8 @@ QAHistogram::QAHistogram(std::string name, std::vector<AxisD> axes, std::string 
                                                                                                                       type_(Type::kTwoDimArray),
                                                                                                                       histoaxis_(histoaxis) {
 }
+
+
 /**
  * Copy Constructor Only use before Initialize is called.
  * @param other QAHistogram which is supposed to be copied.
@@ -83,11 +85,15 @@ std::unique_ptr<Impl::QAHistoBase> QAHistogram::MakeHisto1D(InputVariableManager
               << std::endl;
     var.CreateChannelVariable(axis.Name(), axis.size());
   }
-  float upper_edge = axis.GetLastBinEdge();
-  float lower_edge = axis.GetFirstBinEdge();
   std::array<InputVariable, 2>
       arr = {{var.FindVariable(axis.Name()), var.FindVariable(weight_)}};
-  return std::make_unique<QAHisto1DPtr>(arr, new TH1F(hist_name.data(), axisname.data(), size, lower_edge, upper_edge));
+
+  /// double* with bin edges is copied with std::memmove
+  /// original array remains untouched
+  return std::make_unique<QAHisto1DPtr>(arr, new TH1F(hist_name.data(),
+                                                      axisname.data(),
+                                                      size,
+                                                      (Double_t*) axis.GetPtr()));
 }
 
 /**
@@ -111,16 +117,12 @@ std::unique_ptr<Impl::QAHistoBase> QAHistogram::MakeHisto2D(InputVariableManager
       var.CreateChannelVariable(axis.Name(), axis.size());
     }
   }
-  auto upper_edge_x = axes_[0].GetLastBinEdge();
-  auto lower_edge_x = axes_[0].GetFirstBinEdge();
-  auto upper_edge_y = axes_[1].GetLastBinEdge();
-  auto lower_edge_y = axes_[1].GetFirstBinEdge();
   std::array<InputVariable, 3>
       arr = {{var.FindVariable(axes_[0].Name()), var.FindVariable(axes_[1].Name()),
               var.FindVariable(weight_)}};
   auto histo = new TH2F(hist_name.data(), axisname.data(),
-                        size_x, lower_edge_x, upper_edge_x,
-                        size_y, lower_edge_y, upper_edge_y);
+                        size_x,  (Double_t*) axes_[0].GetPtr(),
+                        size_y, (Double_t*) axes_[1].GetPtr());
   return std::make_unique<QAHisto2DPtr>(arr, histo);
 }
 
@@ -145,21 +147,13 @@ std::unique_ptr<Impl::QAHistoBase> QAHistogram::MakeHisto2DArray(InputVariableMa
       var.CreateChannelVariable(axis.Name(), axis.size());
     }
   }
-  auto upper_edge_x = axes_[0].GetLastBinEdge();
-  auto lower_edge_x = axes_[0].GetFirstBinEdge();
-  auto upper_edge_y = axes_[1].GetLastBinEdge();
-  auto lower_edge_y = axes_[1].GetFirstBinEdge();
   std::array<InputVariable, 3>
       arr = {{var.FindVariable(axes_[0].Name()), var.FindVariable(axes_[1].Name()),
               var.FindVariable(weight_)}};
   auto histo = new TH2F(hist_name.data(),
                         axisname.data(),
-                        size_x,
-                        lower_edge_x,
-                        upper_edge_x,
-                        size_y,
-                        lower_edge_y,
-                        upper_edge_y);
+                        size_x, (Double_t *) axes_[0].GetPtr(),
+                        size_y, (Double_t *) axes_[1].GetPtr());
   auto haxis = std::make_unique<Qn::AxisD>(histoaxis_);
   auto haxisvar = var.FindVariable(histoaxis_.Name());
   return std::make_unique<QAHisto2DPtr>(arr, histo, std::move(haxis), haxisvar);
