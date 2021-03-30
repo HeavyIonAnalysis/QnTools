@@ -118,16 +118,12 @@ std::unique_ptr<Impl::QAHistoBase> QAHistogram::MakeHisto2D(InputVariableManager
       var.CreateChannelVariable(axis.Name(), axis.size());
     }
   }
-  auto upper_edge_x = axes_[0].GetLastBinEdge();
-  auto lower_edge_x = axes_[0].GetFirstBinEdge();
-  auto upper_edge_y = axes_[1].GetLastBinEdge();
-  auto lower_edge_y = axes_[1].GetFirstBinEdge();
   std::array<InputVariable, 3>
       arr = {{var.FindVariable(axes_[0].Name()), var.FindVariable(axes_[1].Name()),
               var.FindVariable(weight_)}};
   auto histo = new TH2F(hist_name.data(), axisname.data(),
-                        size_x, lower_edge_x, upper_edge_x,
-                        size_y, lower_edge_y, upper_edge_y);
+                        size_x - 1,  (Double_t*) axes_[0].GetPtr(),
+                        size_y - 1, (Double_t*) axes_[1].GetPtr());
   return std::make_unique<QAHisto2DPtr>(arr, histo);
 }
 
