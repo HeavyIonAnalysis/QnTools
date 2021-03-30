@@ -19,8 +19,8 @@
 
 #include "AverageHelper.hpp"
 #include "AxesConfiguration.hpp"
-#include "QVectorHelper.hpp"
-#include "RecenterAction.hpp"
+#include "CorrectionAction.hpp"
+#include "QVectorFunctor.hpp"
 
 /**
  * Testing if exceptions are thrown in case of double initialization.

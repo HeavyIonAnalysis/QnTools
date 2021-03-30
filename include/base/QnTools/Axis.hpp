@@ -125,6 +125,7 @@ class Axis {
 
   typename std::vector<T>::size_type GetNBins() const { return bin_edges_.size() - 1; }
   const T *GetPtr() const { return bin_edges_.data(); }
+  auto GetBinEdges() { return bin_edges_; }
 
   /**
    * Finds bin index for a given value

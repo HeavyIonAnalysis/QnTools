@@ -26,8 +26,10 @@ class ParticleGenerator {
   static constexpr double kPi = M_PI;
 
  public:
-  ParticleGenerator(std::array<double, n_harmonics_> harmonics) : vns_(harmonics),
-                                                                  phi_dist_(nphi_slices, 0, 2 * kPi, [&](const double x) { return PhiPdf(x); }) {}
+  ParticleGenerator(std::array<double, n_harmonics_> harmonics) :
+  vns_(harmonics),
+  phi_dist_(nphi_slices, 0, 2 * kPi, [&](const double x) { return PhiPdf(x); }) {}
+
   double GetPhi(RandomEngine &engine, double psi) {
     return phi_dist_(engine) + psi;
   }

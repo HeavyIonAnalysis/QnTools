@@ -18,17 +18,17 @@
 #define QNTOOLS_AVERAGEHELPER_H_
 
 #include <exception>
+#include <mutex>
 #include <string>
 #include <tuple>
 #include <vector>
-#include <mutex>
 
 #include <ROOT/RDF/ActionHelpers.hxx>
 #include <ROOT/RResultPtr.hxx>
 #include <TROOT.h>
 
 #include "DataContainer.hpp"
-#include "TemplateHelpers.hpp"
+#include "TemplateFunctions.hpp"
 
 namespace Qn {
 
@@ -66,7 +66,7 @@ class AverageHelper : public RActionImpl<AverageHelper<Action>> {
    */
   explicit AverageHelper(Action action) {
     const auto n_slots =
-        ROOT::IsImplicitMTEnabled() ? ROOT::GetImplicitMTPoolSize() : 1;
+        ROOT::IsImplicitMTEnabled() ? ROOT::GetThreadPoolSize() : 1;
     for (std::size_t i = 0; i < n_slots; ++i) {
       is_configured_.push_back(false);
       results_.emplace_back(std::make_shared<Action>(action));

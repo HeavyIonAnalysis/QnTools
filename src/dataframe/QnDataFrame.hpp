@@ -19,14 +19,19 @@
 // common headers
 #include "AverageHelper.hpp"
 #include "AxesConfiguration.hpp"
-#include "EqualBinningHelper.hpp"
-#include "QVectorHelper.hpp"
-#include "QVectorNormalizationHelper.hpp"
+#include "BinningEqualizer.hpp"
+#include "QVectorFunctor.hpp"
+#include "QVectorNormalizationFunctor.hpp"
 // correction step
-#include "RecenterAction.hpp"
-#include "RecenterVector.hpp"
+#include "CorrectionAction.hpp"
+#include "CorrectionBuilder.hpp"
 // correlation step
-#include "CorrelationAction.hpp"
 #include "CorrelationFunctions.hpp"
-#include "ReSampleHelper.hpp"
+#include "CorrelationAction.hpp"
+#include "CorrelationBuilder.hpp"
+#include "ReSampleFunctor.hpp"
+// toymc
+#include "ParticleGeneratorFunctor.hpp"
+#include "ChannelDetectorFunctor.hpp"
+#include "TrackingDetectorFunctor.hpp"
 #endif  // QNTOOLS_QNDATAFRAME_H_
