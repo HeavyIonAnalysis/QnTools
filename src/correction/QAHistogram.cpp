@@ -37,6 +37,8 @@ QAHistogram::QAHistogram(std::string name, std::vector<AxisD> axes, std::string 
                                                                                                                       type_(Type::kTwoDimArray),
                                                                                                                       histoaxis_(histoaxis) {
 }
+
+
 /**
  * Copy Constructor Only use before Initialize is called.
  * @param other QAHistogram which is supposed to be copied.
@@ -83,11 +85,16 @@ std::unique_ptr<Impl::QAHistoBase> QAHistogram::MakeHisto1D(InputVariableManager
               << std::endl;
     var.CreateChannelVariable(axis.Name(), axis.size());
   }
-  float upper_edge = axis.GetLastBinEdge();
-  float lower_edge = axis.GetFirstBinEdge();
   std::array<InputVariable, 2>
       arr = {{var.FindVariable(axis.Name()), var.FindVariable(weight_)}};
-  return std::make_unique<QAHisto1DPtr>(arr, new TH1F(hist_name.data(), axisname.data(), size, lower_edge, upper_edge));
+
+  /// 1. double* with bin edges is copied with std::memmove
+  /// original array remains untouched
+  /// 2. size-1 since last element in the array is the up edge of the last bin
+  return std::make_unique<QAHisto1DPtr>(arr, new TH1F(hist_name.data(),
+                                                      axisname.data(),
+                                                      size - 1,
+                                                      (Double_t*) axis.GetPtr()));
 }
 
 /**
