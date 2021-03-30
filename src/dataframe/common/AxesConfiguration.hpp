@@ -23,7 +23,7 @@
 #include <vector>
 
 #include "Axis.hpp"
-#include "TemplateHelpers.hpp"
+#include "TemplateFunctions.hpp"
 
 namespace Qn {
 namespace Impl {
@@ -70,7 +70,7 @@ class AxesConfiguration {
   using AxisType = typename std::tuple_element<0, std::tuple<Axes...>>::type;
   using AxisValueType = typename AxisType::ValueType;
   using AxisValueTypeTuple =
-      typename TemplateHelpers::TupleOf<sizeof...(Axes), AxisValueType>;
+      typename TemplateFunctions::TupleOf<sizeof...(Axes), AxisValueType>;
 
   /**
    * Constructor
@@ -87,7 +87,7 @@ class AxesConfiguration {
    * @return vector of axes.
    */
   std::vector<AxisType> GetVector() const {
-    return TemplateHelpers::ToVector(axes_);
+    return TemplateFunctions::ToVector(axes_);
   }
 
   /**
@@ -114,7 +114,7 @@ class AxesConfiguration {
    */
   auto GetBinEdgesIndexMap() const {
     using edgest =
-        typename Qn::TemplateHelpers::TupleOf<kDimension,
+        typename Qn::TemplateFunctions::TupleOf<kDimension,
                                               typename AxisType::ValueType>;
     std::vector<std::pair<edgest, edgest>> index_map(GetSize());
     for (int i = 0; i < GetSize(); ++i) {
@@ -125,7 +125,7 @@ class AxesConfiguration {
         lower = axis.GetLowerBinEdge(bin);
         higher = axis.GetUpperBinEdge(bin);
       };
-      Qn::TemplateHelpers::TupleForEach(caller, lower, higher, axes_, ndimbins);
+      Qn::TemplateFunctions::TupleForEach(caller, lower, higher, axes_, ndimbins);
       index_map.at(i) = std::pair(lower, higher);
     }
     return index_map;
@@ -198,7 +198,7 @@ class AxesConfiguration {
    * @return tuple of length n with index of axis in each entry
    */
   auto GetNDimBins(int linear_index) const {
-    Qn::TemplateHelpers::TupleOf<kDimension, std::size_t> tuple;
+    Qn::TemplateFunctions::TupleOf<kDimension, std::size_t> tuple;
     int dimension = 1;
     auto caller = [&](std::size_t &t) {
       std::size_t index = linear_index / stride_[dimension];
@@ -206,7 +206,7 @@ class AxesConfiguration {
       ++dimension;
       t = index;
     };
-    Qn::TemplateHelpers::TupleForEach(caller, tuple);
+    Qn::TemplateFunctions::TupleForEach(caller, tuple);
     return tuple;
   }
 

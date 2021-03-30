@@ -74,7 +74,7 @@ inline auto d2(unsigned int h_u) {
       std::complex<double> r0{R.sumweights(), 0};
       std::complex<double> p1{P.x(h_u), P.y(h_u)};
       std::complex<double> r1{R.x(h_u), R.y(h_u)};
-      return (p1 * std::conj(r1) - p0).real() / (p0*r0 - p0).real();
+      return (p1 * std::conj(r1) - p0).real() / (p0 * r0 - p0).real();
     }
   };
 }
@@ -97,10 +97,9 @@ inline auto nd2() {
 }  // namespace Qn::Correlation::TwoParticle
 
 /**
- * Four particle correlation functions
+ * mixed harmonics
  */
-namespace Qn::Correlation::FourParticle {
-
+namespace Qn::Correlation::MixedHarmonics {
 inline auto xxx(unsigned int h_a, unsigned int h_b, unsigned int h_c) {
   return [h_a, h_b, h_c](const Qn::QVector &u, const Qn::QVector &Qb,
                          const Qn::QVector &Qc) {
@@ -149,6 +148,12 @@ inline auto xxy(unsigned int h_a, unsigned int h_b, unsigned int h_c) {
     return u.x(h_a) * Qb.x(h_b) * Qc.y(h_c);
   };
 }
+}  // namespace Qn::Correlation::MixedHarmonics
+
+/**
+ * Four particle correlation functions
+ */
+namespace Qn::Correlation::FourParticle {
 
 inline auto n4() {
   return [](const Qn::QVector &q) {
@@ -167,23 +172,20 @@ inline auto nd4() {
 
 inline auto d4(unsigned int h_u) {
   return [h_u](const Qn::QVector &p, const Qn::QVector &r) {
-    auto R = r.DeNormal();
-    auto RM = r.sumweights();
-    auto P = p.DeNormal();
-    auto PM = p.sumweights();
-    auto Q = p.DeNormal();
-    auto QM = p.sumweights();
-    if (PM < 4.) {
-      double ret = NAN;
-      return ret;
-    }
-    std::complex<double> r0{RM, 0.};
-    std::complex<double> q0{QM, 0.};
-    std::complex<double> p1{P.x(h_u), P.y(h_u)};
-    std::complex<double> r1{R.x(h_u), R.y(h_u)};
-    std::complex<double> r2{R.x(2 * h_u), R.y(2 * h_u)};
-    std::complex<double> q1{P.x(h_u), P.y(h_u)};
-    std::complex<double> q2{P.x(2 * h_u), P.y(2 * h_u)};
+    const auto R = r.DeNormal();
+    const auto RM = r.sumweights();
+    const auto P = p.DeNormal();
+    const auto PM = p.sumweights();
+    const auto Q = p.DeNormal();
+    const auto QM = p.sumweights();
+    if (PM < 4.) return std::nan("");
+    const auto r0 = std::complex<double>{RM, 0.};
+    const auto q0 = std::complex<double>{QM, 0.};
+    const auto p1 = std::complex<double>{P.x(h_u), P.y(h_u)};
+    const auto r1 = std::complex<double>{R.x(h_u), R.y(h_u)};
+    const auto r2 = std::complex<double>{R.x(2 * h_u), R.y(2 * h_u)};
+    const auto q1 = std::complex<double>{P.x(h_u), P.y(h_u)};
+    const auto q2 = std::complex<double>{P.x(2 * h_u), P.y(2 * h_u)};
 
     auto c4 = p1 * r1 * std::conj(r1) * std::conj(r1) -
               q2 * std::conj(r1) * std::conj(r1) - p1 * r1 * std::conj(r2) -

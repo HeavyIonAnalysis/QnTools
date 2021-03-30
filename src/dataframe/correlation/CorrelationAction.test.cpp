@@ -20,8 +20,8 @@
 #include "AverageHelper.hpp"
 #include "AxesConfiguration.hpp"
 #include "CorrelationAction.hpp"
-#include "ReSampleHelper.hpp"
 #include "CorrelationFunctions.hpp"
+#include "ReSampleFunctor.hpp"
 
 /**
  * Basic test of the correlation

@@ -50,7 +50,7 @@ class BootStrap {
   [[nodiscard]] std::vector<double> GetMeans() const {
     size_t size = vector_sum_values_.size();
     std::vector<double> means_(size);
-    for (int i = 0; i < size; ++i) {
+    for (std::size_t i = 0; i < size; ++i) {
       means_[i] = vector_sum_values_[i] / vector_sum_weights_[i];
     }
     return means_;

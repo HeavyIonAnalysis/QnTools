@@ -72,7 +72,7 @@ class StatCalculate : public Stat {
   /// Returns variance of the sample mean from bootstrapping using the variance statistic.
   [[nodiscard]] double VarianceOfMeanFromBootstrap() const {
     Statistics stats;
-    for (int i = 0; i < sample_means_.size(); ++i) {
+    for (std::size_t i = 0; i < sample_means_.size(); ++i) {
       stats.Fill(sample_means_[i], sample_weights_[i]);
     }
     return stats.Variance();
