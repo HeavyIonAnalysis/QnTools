@@ -88,12 +88,11 @@ std::unique_ptr<Impl::QAHistoBase> QAHistogram::MakeHisto1D(InputVariableManager
   std::array<InputVariable, 2>
       arr = {{var.FindVariable(axis.Name()), var.FindVariable(weight_)}};
 
-  /// 1. double* with bin edges is copied with std::memmove
+  /// double* with bin edges is copied with std::memmove
   /// original array remains untouched
-  /// 2. size-1 since last element in the array is the up edge of the last bin
   return std::make_unique<QAHisto1DPtr>(arr, new TH1F(hist_name.data(),
                                                       axisname.data(),
-                                                      size - 1,
+                                                      size,
                                                       (Double_t*) axis.GetPtr()));
 }
 
@@ -122,8 +121,8 @@ std::unique_ptr<Impl::QAHistoBase> QAHistogram::MakeHisto2D(InputVariableManager
       arr = {{var.FindVariable(axes_[0].Name()), var.FindVariable(axes_[1].Name()),
               var.FindVariable(weight_)}};
   auto histo = new TH2F(hist_name.data(), axisname.data(),
-                        size_x - 1,  (Double_t*) axes_[0].GetPtr(),
-                        size_y - 1, (Double_t*) axes_[1].GetPtr());
+                        size_x,  (Double_t*) axes_[0].GetPtr(),
+                        size_y, (Double_t*) axes_[1].GetPtr());
   return std::make_unique<QAHisto2DPtr>(arr, histo);
 }
 
