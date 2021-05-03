@@ -41,7 +41,10 @@ TGraphErrors *DataContainerHelper::ToTGraph(const Qn::DataContainer<Statistics, 
   auto graph = new TGraphErrors();
   unsigned int ibin = 0;
   for (const auto &bin : data) {
-    if (bin.SumWeights() <= 0) continue;
+    if (bin.SumWeights() <= 0) {
+      ibin++;
+      continue;
+    }
     auto y = bin.Mean();
     auto ey = bin.StandardErrorOfMean();
     auto xhi = data.GetAxes().front().GetUpperBinEdge(ibin);
@@ -50,8 +53,8 @@ TGraphErrors *DataContainerHelper::ToTGraph(const Qn::DataContainer<Statistics, 
     auto x = xlo + xhalfwidth;
     double ex = 0;
     if (drawerrors == Errors::XandY) { ex = xhalfwidth; }
-    graph->SetPoint(ibin, x, y);
-    graph->SetPointError(ibin, ex, ey);
+    graph->SetPoint(graph->GetN(), x, y); /* append point to TGraph */
+    graph->SetPointError(graph->GetN() - 1, ex, ey); /* edit last point */
     graph->SetMarkerStyle(kFullCircle);
     ibin++;
   }
@@ -70,7 +73,10 @@ TGraphErrors *DataContainerHelper::ToTGraph(const DataContainerStatCollect &data
   unsigned int ibin = 0;
   for (const auto &bin : data) {
     const auto &stats = bin.GetStatistics();
-    if (stats.SumWeights() <= 0) continue;
+    if (stats.SumWeights() <= 0) {
+      ibin++;
+      continue;
+    }
     auto y = stats.Mean();
     auto ey = stats.StandardErrorOfMean();
     auto xhi = data.GetAxes().front().GetUpperBinEdge(ibin);
@@ -79,8 +85,8 @@ TGraphErrors *DataContainerHelper::ToTGraph(const DataContainerStatCollect &data
     auto x = xlo + xhalfwidth;
     double ex = 0;
     if (drawerrors == Errors::XandY) { ex = xhalfwidth; }
-    graph->SetPoint(ibin, x, y);
-    graph->SetPointError(ibin, ex, ey);
+    graph->SetPoint(graph->GetN(), x, y);
+    graph->SetPointError(graph->GetN() - 1, ex, ey);
     graph->SetMarkerStyle(kFullCircle);
     ibin++;
   }
@@ -96,7 +102,10 @@ TGraphErrors *DataContainerHelper::ToTGraph(const DataContainer<StatCalculate, A
   auto graph = new TGraphErrors();
   unsigned int ibin = 0;
   for (const auto &bin : data) {
-    if (bin.SumWeights() <= 0.) continue;
+    if (bin.SumWeights() <= 0.) {
+      ibin++;
+      continue;
+    }
     auto y = bin.Mean();
     auto ey = bin.StandardErrorOfMean();
     auto xhi = data.GetAxes().front().GetUpperBinEdge(ibin);
@@ -105,8 +114,8 @@ TGraphErrors *DataContainerHelper::ToTGraph(const DataContainer<StatCalculate, A
     auto x = xlo + xhalfwidth;
     double ex = 0;
     if (drawerror == Errors::XandY) { ex = xhalfwidth; }
-    graph->SetPoint(ibin, x, y);
-    graph->SetPointError(ibin, ex, ey);
+    graph->SetPoint(graph->GetN(), x, y);
+    graph->SetPointError(graph->GetN() - 1, ex, ey);
     graph->SetMarkerStyle(kFullCircle);
     ibin++;
   }
