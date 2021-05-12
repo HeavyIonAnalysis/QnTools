@@ -65,12 +65,14 @@ StatCalculate Merge(const StatCalculate &lhs, const StatCalculate &rhs) {
     merged.sample_weights_ = lhs.sample_weights_;
   } else {
     for (int i = 0; i < rhs.sample_means_.size(); ++i) {
-      merged.sample_weights_.push_back(lhs.sample_weights_[i] +
-          rhs.sample_weights_[i]);
-      merged.sample_means_.push_back(
-          (   lhs.sample_means_[i] * lhs.sample_weights_[i]
-              + rhs.sample_means_[i] * rhs.sample_weights_[i])
-              / merged.sample_weights_[i]);
+      assert(!std::isnan(rhs.sample_means_[i]) || rhs.sample_weights_[i] <= 0);
+      assert(!std::isnan(lhs.sample_means_[i]) || lhs.sample_weights_[i] <= 0);
+      merged.sample_weights_.push_back(lhs.sample_weights_[i] + rhs.sample_weights_[i]);
+      auto lhs_wm = lhs.sample_weights_[i] > 0? lhs.sample_means_[i] * lhs.sample_weights_[i] : 0.0;
+      auto rhs_wm = rhs.sample_weights_[i] > 0? rhs.sample_means_[i] * rhs.sample_weights_[i] : 0.0;
+      auto merged_mean = merged.sample_weights_[i] > 0? (lhs_wm + rhs_wm) / merged.sample_weights_[i] : std::nan("nan");
+      merged.sample_means_.push_back(merged_mean);
+      assert(!std::isnan(merged.sample_means_[i]) || merged.sample_weights_[i] <= 0);
     }
   }
   return merged;
@@ -89,8 +91,11 @@ StatCalculate operator+(const StatCalculate &lhs, const StatCalculate &rhs) {
   sum.variance_ = lhs.Variance() + rhs.Variance();
   // Bootstrap samples
   for (int i = 0; i < lhs.sample_means_.size(); ++i) {
+    assert(!std::isnan(lhs.sample_means_[i]) || lhs.sample_weights_[i] <= 0);
+    assert(!std::isnan(rhs.sample_means_[i]) || rhs.sample_weights_[i] <= 0);
     sum.sample_weights_[i] = lhs.sample_weights_[i];
     sum.sample_means_[i] = lhs.sample_means_[i] + rhs.sample_means_[i];
+    assert(!std::isnan(sum.sample_means_[i]) || sum.sample_weights_[i] <= 0);
   }
   return sum;
 }
@@ -108,8 +113,11 @@ StatCalculate operator-(const StatCalculate &lhs, const StatCalculate &rhs) {
   difference.variance_ = lhs.Variance() + rhs.Variance();
   // Bootstrap samples
   for (int i = 0; i < lhs.sample_means_.size(); ++i) {
+    assert(!std::isnan(lhs.sample_means_[i]) || lhs.sample_weights_[i] <= 0);
+    assert(!std::isnan(rhs.sample_means_[i]) || rhs.sample_weights_[i] <= 0);
     difference.sample_weights_[i] = lhs.sample_weights_[i];
     difference.sample_means_[i] = lhs.sample_means_[i] - rhs.sample_means_[i];
+    assert(!std::isnan(difference.sample_means_[i]) || difference.sample_weights_[i] <= 0);
   }
   return difference;
 }
@@ -128,8 +136,13 @@ StatCalculate operator*(const StatCalculate &lhs, const StatCalculate &rhs) {
       + rhs.Variance() * lhs.Mean() * lhs.Mean();
   // Bootstrap samples
   for (int i = 0; i < lhs.sample_means_.size(); ++i) {
-    product.sample_weights_[i] = lhs.sample_weights_[i];
+    assert(!std::isnan(lhs.sample_means_[i]) || lhs.sample_weights_[i] <= 0);
+    assert(!std::isnan(rhs.sample_means_[i]) || rhs.sample_weights_[i] <= 0);
+    auto product_weight = (lhs.sample_weights_[i] <= 0 || rhs.sample_weights_[i] <= 0)?
+                        0.0 : lhs.sample_weights_[i];
+    product.sample_weights_[i] = product_weight;
     product.sample_means_[i] = lhs.sample_means_[i] * rhs.sample_means_[i];
+    assert(!std::isnan(product.sample_means_[i]) || product.sample_weights_[i] <= 0);
   }
   return product;
 }
@@ -148,8 +161,12 @@ StatCalculate operator/(const StatCalculate &num, const StatCalculate &den) {
       + num.Mean() * num.Mean() * den.Variance() / std::pow(den.Mean(), 4);
   // Bootstrap samples
   for (int i = 0; i < num.sample_means_.size(); ++i) {
-    ratio.sample_weights_[i] = num.sample_weights_[i];
+    assert(!std::isnan(num.sample_means_[i]) || num.sample_weights_[i] <= 0);
+    assert(!std::isnan(den.sample_means_[i]) || den.sample_weights_[i] <= 0);
+    auto ratio_weight = (num.sample_weights_[i] <= 0 || den.sample_weights_[i] <= 0)? 0.0 : num.sample_weights_[i];
+    ratio.sample_weights_[i] = ratio_weight;
     ratio.sample_means_[i] = num.sample_means_[i] / den.sample_means_[i];
+    assert(!std::isnan(ratio.sample_means_[i]) || ratio.sample_weights_[i] <= 0 || (num.sample_means_[i] == 0 && den.sample_means_[i] == 0));
   }
   return ratio;
 }

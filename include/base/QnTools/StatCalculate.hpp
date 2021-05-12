@@ -20,6 +20,8 @@
 
 #include <cmath>
 #include <vector>
+#include <cassert>
+#include <iostream>
 
 #include "Rtypes.h"
 #include "Stat.hpp"
@@ -44,6 +46,9 @@ class StatCalculate : public Stat {
     const auto& samples = stats.GetBootStrap();
     sample_means_ = samples.GetMeans();
     sample_weights_ = samples.GetWeights();
+    for (int i = 0; i < sample_means_.size(); ++i) {
+      assert(!std::isnan(sample_means_[i]) || sample_weights_[i] <= 0);
+    }
     if (stats.GetWeightType() == Stat::WeightType::OBSERVABLE) {
       SetWeightType(WeightType::OBSERVABLE);
     } else {
@@ -72,8 +77,16 @@ class StatCalculate : public Stat {
   /// Returns variance of the sample mean from bootstrapping using the variance statistic.
   [[nodiscard]] double VarianceOfMeanFromBootstrap() const {
     Statistics stats;
+    std::size_t nans_count = 0;
     for (std::size_t i = 0; i < sample_means_.size(); ++i) {
+      if (std::isnan(sample_means_[i]) || std::isnan(sample_weights_[i])) {
+        nans_count++;
+        continue;
+      }
       stats.Fill(sample_means_[i], sample_weights_[i]);
+    }
+    if (nans_count > 0) {
+      std::cerr << "A few nan-s (" << nans_count << " of " << sample_means_.size() << ") is observed among boostrap means" << std::endl;
     }
     return stats.Variance();
   }
@@ -100,6 +113,7 @@ class StatCalculate : public Stat {
 
   /// Returns the standard error of the mean from bootstrapping using the variance statistic.
   [[nodiscard]] double StdDevOfMeanFromBootstrapVariance() const {
+    assert(VarianceOfMeanFromBootstrap() >= 0);
     return std::sqrt(VarianceOfMeanFromBootstrap());
   }
   /// Returns the sample mean.
