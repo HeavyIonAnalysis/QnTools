@@ -30,6 +30,7 @@
 #include "Rtypes.h"
 #include "StatCalculate.hpp"
 #include "StatCollect.hpp"
+#include "FitResult.hpp"
 #include "TBrowser.h"
 #include "TClass.h"
 #include "TCollection.h"
@@ -892,6 +893,7 @@ using DataContainerStatCollect = DataContainer<Qn::StatCollect, AxisD>;
 using DataContainerStatistic = DataContainer<Qn::Statistics, AxisD>;
 using BinnedStatistics = DataContainer<Qn::StatCalculate, AxisD>;
 using DataContainerQVector = DataContainer<Qn::QVector, AxisD>;
+using DataContainerFitResult = DataContainer<Qn::FitResult>;
 
 //--------------------------------------------//
 // Template specializations for visualisation //
@@ -1005,6 +1007,31 @@ template<typename T, typename AxisType>
 DataContainer<T, AxisType> Pow(const DataContainer<T, AxisType> &a, unsigned int k) {
   return a.Map([k](const T &x) { return Qn::Pow(x, k); });
 }
+
+/**
+ * @brief Performs fit with TF1 function f1. Signature is similar to TGraph::Fit
+ * @param calc
+ * @param f1
+ * @param axis
+ * @param option
+ * @param goption
+ * @param rxmin
+ * @param rxmax
+ * @return
+ */
+inline
+DataContainerFitResult
+Fit(const DataContainerStatCalculate& calc,
+         TF1 *f1,
+         const std::string& axis,
+         Option_t *option = "",
+         Option_t *goption = "",
+         Axis_t rxmin = 0,
+         Axis_t rxmax = 0) {
+  /* To be implemented */
+  return {};
+}
+
 //// fuction for extrapolation RND-sub Q1Q1 correlation to full event resolution using Ollitrault method
 //// NOTE: Only Q1Q1 correlations suitable
 //template<typename AxisType>

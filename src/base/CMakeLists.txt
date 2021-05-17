@@ -1,7 +1,7 @@
 project(QnToolsBase)
-set(SOURCES QVector.cpp DataContainerHelper.cpp StatCollect.cpp StatCalculate.cpp Statistics.cpp BootStrap.cpp)
+set(SOURCES QVector.cpp DataContainerHelper.cpp StatCollect.cpp StatCalculate.cpp Statistics.cpp BootStrap.cpp FitResult.cpp)
 set(HEADERS DataContainer.hpp DataContainerHelper.hpp Axis.hpp QVector.hpp
-             Cuts.hpp Statistics.hpp StatCalculate.hpp StatCollect.hpp BootStrap.hpp Stat.hpp)
+             Cuts.hpp Statistics.hpp StatCalculate.hpp StatCollect.hpp BootStrap.hpp Stat.hpp FitResult.hpp)
 set(HEADERSQNTOOLS ${HEADERS})
 list(TRANSFORM HEADERSQNTOOLS PREPEND QnTools/)
 

@@ -28,6 +28,15 @@
 
 namespace Qn {
 
+struct StatCalculateData {
+  std::vector<double> sample_means_; /// means of bootstrap samples
+  std::vector<double> sample_weights_; /// weights of bootstrap samples
+  double mean_ = 0.; /// mean of the distribution
+  double variance_ = 0.; /// variance of the distribution
+  double sum_weight_ = 0.; /// sum of weights
+  double sum_weight2_ = 0.; /// sum of {weights}^{2}
+};
+
 class StatCalculate : public Stat {
  public:
 
@@ -123,6 +132,17 @@ class StatCalculate : public Stat {
   [[nodiscard]] double StandardErrorOfMean() const {
     if (GetErrorType() == ErrorType::PROPAGATION) return StdDevOfMeanFromPropagation();
     else                                          return StdDevOfMeanFromBootstrapVariance();
+  }
+
+  StatCalculateData Data() const {
+    StatCalculateData result;
+    result.sample_weights_ = sample_weights_;
+    result.sample_means_ = sample_means_;
+    result.mean_ = mean_;
+    result.sum_weight2_ = sum_weight2_;
+    result.sum_weight_ = sum_weight_;
+    result.variance_ = variance_;
+    return result;
   }
 
   /// Merge using pooled statistics
