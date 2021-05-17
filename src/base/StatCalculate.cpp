@@ -65,14 +65,19 @@ StatCalculate Merge(const StatCalculate &lhs, const StatCalculate &rhs) {
     merged.sample_weights_ = lhs.sample_weights_;
   } else {
     for (int i = 0; i < rhs.sample_means_.size(); ++i) {
-      assert(!std::isnan(rhs.sample_means_[i]) || rhs.sample_weights_[i] <= 0);
-      assert(!std::isnan(lhs.sample_means_[i]) || lhs.sample_weights_[i] <= 0);
-      merged.sample_weights_.push_back(lhs.sample_weights_[i] + rhs.sample_weights_[i]);
-      auto lhs_wm = lhs.sample_weights_[i] > 0? lhs.sample_means_[i] * lhs.sample_weights_[i] : 0.0;
-      auto rhs_wm = rhs.sample_weights_[i] > 0? rhs.sample_means_[i] * rhs.sample_weights_[i] : 0.0;
-      auto merged_mean = merged.sample_weights_[i] > 0? (lhs_wm + rhs_wm) / merged.sample_weights_[i] : std::nan("nan");
+      auto lhs_mean = lhs.sample_means_[i];
+      auto lhs_weight = lhs.sample_weights_[i];
+      auto rhs_mean = rhs.sample_means_[i];
+      auto rhs_weight = rhs.sample_weights_[i];
+      assert(StatCalculate::TestWeightedValue(lhs_mean, lhs_weight));
+      assert(StatCalculate::TestWeightedValue(rhs_mean, rhs_weight));
+      auto merged_weight = lhs_weight + rhs_weight;
+      auto lhs_wm = lhs_weight > 0? lhs_mean * lhs_weight : 0.0;
+      auto rhs_wm = rhs_weight > 0? rhs_mean * rhs_weight : 0.0;
+      auto merged_mean = merged_weight > 0? (lhs_wm + rhs_wm) / merged_weight : std::nan("nan");
+      merged.sample_weights_.push_back(merged_weight);
       merged.sample_means_.push_back(merged_mean);
-      assert(!std::isnan(merged.sample_means_[i]) || merged.sample_weights_[i] <= 0);
+      assert(StatCalculate::TestWeightedValue(merged_mean, merged_weight));
     }
   }
   return merged;
