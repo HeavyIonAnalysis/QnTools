@@ -91,11 +91,21 @@ StatCalculate operator+(const StatCalculate &lhs, const StatCalculate &rhs) {
   sum.variance_ = lhs.Variance() + rhs.Variance();
   // Bootstrap samples
   for (int i = 0; i < lhs.sample_means_.size(); ++i) {
-    assert(!std::isnan(lhs.sample_means_[i]) || lhs.sample_weights_[i] <= 0);
-    assert(!std::isnan(rhs.sample_means_[i]) || rhs.sample_weights_[i] <= 0);
-    sum.sample_weights_[i] = lhs.sample_weights_[i];
-    sum.sample_means_[i] = lhs.sample_means_[i] + rhs.sample_means_[i];
-    assert(!std::isnan(sum.sample_means_[i]) || sum.sample_weights_[i] <= 0);
+    auto lhs_mean = lhs.sample_means_[i];
+    auto lhs_weight = lhs.sample_weights_[i];
+    auto rhs_mean = rhs.sample_means_[i];
+    auto rhs_weight = rhs.sample_weights_[i];
+    assert(StatCalculate::TestWeightedValue(lhs_mean, lhs_weight));
+    assert(StatCalculate::TestWeightedValue(rhs_mean, rhs_weight));
+    /* if any of arguments is not determined, sum is also not determined */
+    if (lhs_weight <= 0 || rhs_weight <= 0) {
+      sum.sample_weights_[i] = 0;
+      sum.sample_means_[i] = std::nan("nan");
+    } else {
+      sum.sample_weights_[i] = lhs.sample_weights_[i];
+      sum.sample_means_[i] = lhs.sample_means_[i] + rhs.sample_means_[i];
+    }
+    assert(StatCalculate::TestWeightedValue(sum.sample_means_[i], sum.sample_weights_[i]));
   }
   return sum;
 }
@@ -113,11 +123,21 @@ StatCalculate operator-(const StatCalculate &lhs, const StatCalculate &rhs) {
   difference.variance_ = lhs.Variance() + rhs.Variance();
   // Bootstrap samples
   for (int i = 0; i < lhs.sample_means_.size(); ++i) {
-    assert(!std::isnan(lhs.sample_means_[i]) || lhs.sample_weights_[i] <= 0);
-    assert(!std::isnan(rhs.sample_means_[i]) || rhs.sample_weights_[i] <= 0);
-    difference.sample_weights_[i] = lhs.sample_weights_[i];
-    difference.sample_means_[i] = lhs.sample_means_[i] - rhs.sample_means_[i];
-    assert(!std::isnan(difference.sample_means_[i]) || difference.sample_weights_[i] <= 0);
+    auto lhs_mean = lhs.sample_means_[i];
+    auto lhs_weight = lhs.sample_weights_[i];
+    auto rhs_mean = rhs.sample_means_[i];
+    auto rhs_weight = rhs.sample_weights_[i];
+    assert(StatCalculate::TestWeightedValue(lhs_mean, lhs_weight));
+    assert(StatCalculate::TestWeightedValue(rhs_mean, rhs_weight));
+    /* if any of arguments is not determined, difference is also not determined */
+    if (lhs_weight <= 0 || rhs_weight <= 0) {
+      difference.sample_weights_[i] = 0;
+      difference.sample_means_[i] = std::nan("nan");
+    } else {
+      difference.sample_weights_[i] = lhs.sample_weights_[i];
+      difference.sample_means_[i] = lhs.sample_means_[i] - rhs.sample_means_[i];
+    }
+    assert(StatCalculate::TestWeightedValue(difference.sample_means_[i], difference.sample_weights_[i]));
   }
   return difference;
 }
@@ -136,13 +156,20 @@ StatCalculate operator*(const StatCalculate &lhs, const StatCalculate &rhs) {
       + rhs.Variance() * lhs.Mean() * lhs.Mean();
   // Bootstrap samples
   for (int i = 0; i < lhs.sample_means_.size(); ++i) {
-    assert(!std::isnan(lhs.sample_means_[i]) || lhs.sample_weights_[i] <= 0);
-    assert(!std::isnan(rhs.sample_means_[i]) || rhs.sample_weights_[i] <= 0);
-    auto product_weight = (lhs.sample_weights_[i] <= 0 || rhs.sample_weights_[i] <= 0)?
-                        0.0 : lhs.sample_weights_[i];
-    product.sample_weights_[i] = product_weight;
-    product.sample_means_[i] = lhs.sample_means_[i] * rhs.sample_means_[i];
-    assert(!std::isnan(product.sample_means_[i]) || product.sample_weights_[i] <= 0);
+    auto lhs_mean = lhs.sample_means_[i];
+    auto lhs_weight = lhs.sample_weights_[i];
+    auto rhs_mean = rhs.sample_means_[i];
+    auto rhs_weight = rhs.sample_weights_[i];
+    assert(StatCalculate::TestWeightedValue(lhs_mean, lhs_weight));
+    assert(StatCalculate::TestWeightedValue(rhs_mean, rhs_weight));
+    if (lhs_weight <= 0 || rhs_weight <= 0) {
+      product.sample_weights_[i] = 0.;
+      product.sample_means_[i] = std::nan("nan");
+    } else {
+      product.sample_weights_[i] = lhs.sample_weights_[i];
+      product.sample_means_[i] = lhs.sample_means_[i] * rhs.sample_means_[i];
+    }
+    assert(StatCalculate::TestWeightedValue(product.sample_means_[i], product.sample_weights_[i]));
   }
   return product;
 }
@@ -161,11 +188,19 @@ StatCalculate operator/(const StatCalculate &num, const StatCalculate &den) {
       + num.Mean() * num.Mean() * den.Variance() / std::pow(den.Mean(), 4);
   // Bootstrap samples
   for (int i = 0; i < num.sample_means_.size(); ++i) {
-    assert(!std::isnan(num.sample_means_[i]) || num.sample_weights_[i] <= 0);
-    assert(!std::isnan(den.sample_means_[i]) || den.sample_weights_[i] <= 0);
-    auto ratio_weight = (num.sample_weights_[i] <= 0 || den.sample_weights_[i] <= 0)? 0.0 : num.sample_weights_[i];
-    ratio.sample_weights_[i] = ratio_weight;
-    ratio.sample_means_[i] = num.sample_means_[i] / den.sample_means_[i];
+    auto lhs_mean = num.sample_means_[i];
+    auto lhs_weight = num.sample_weights_[i];
+    auto rhs_mean = den.sample_means_[i];
+    auto rhs_weight = den.sample_weights_[i];
+    assert(StatCalculate::TestWeightedValue(lhs_mean, lhs_weight));
+    assert(StatCalculate::TestWeightedValue(rhs_mean, rhs_weight));
+    if (num.sample_weights_[i] <= 0 || den.sample_weights_[i] <= 0) {
+      ratio.sample_weights_[i] = 0.0;
+      ratio.sample_means_[i] = std::nan("nan");
+    } else {
+      ratio.sample_weights_[i] = num.sample_weights_[i];
+      ratio.sample_means_[i] = num.sample_means_[i] / den.sample_means_[i];
+    }
     assert(!std::isnan(ratio.sample_means_[i]) || ratio.sample_weights_[i] <= 0 || (num.sample_means_[i] == 0 && den.sample_means_[i] == 0));
   }
   return ratio;
