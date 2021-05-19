@@ -203,6 +203,23 @@ TEST_F(DataContainerUnitTest, RebinAfterDivision) {
   EXPECT_FLOAT_EQ(div_rebin_m_0, (div_m_0*div_w_0 + div_m_1*div_w_1)/(div_w_0+div_w_1));
 }
 
+TEST_F(DataContainerUnitTest, DivideDifferentAxes) {
+  Qn::AxisD ax_centrality("centrality", 10, 0, 100);
+  Qn::AxisD ax_pt("pt", 10, 0, 2.);
+  Qn::AxisD ax_y("y", 10, -2., 2.);
+  Qn::AxisD ax_eta("eta", 20, -2., 4.);
+
+  Qn::DataContainerStatCollect arg1_collect;
+  arg1_collect.AddAxes({ax_centrality, ax_pt, ax_eta, ax_y});
+  Qn::DataContainerStatCollect arg2_collect;
+  arg2_collect.AddAxes({ax_centrality, ax_eta});
+
+  Qn::DataContainerStatCalculate arg1(arg1_collect);
+  Qn::DataContainerStatCalculate arg2(arg2_collect);
+  auto result = arg1 / arg2;
+
+}
+
 TEST_F(DataContainerUnitTest, ConvergenceOfSampleVariance) {
   using namespace Qn;
   Qn::DataContainerStatCollect stats_largest;

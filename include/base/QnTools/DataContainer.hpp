@@ -656,41 +656,89 @@ class DataContainer : public TObject {
  * The axes need to have the same order.
  * Elements in datacontainer with smaller dimensions are used as "integrated bins".
  * @tparam Function type of function
- * @param data Datacontainer
+ * @param other Datacontainer
  * @param lambda function to be applied on both elements
  * @return resulting datacontainer.
  */
   template<typename Function>
-  DataContainer<T, AxisType> Apply(const DataContainer<T, AxisType> &data, Function &&lambda) const {
+  DataContainer<T, AxisType> Apply(const DataContainer<T, AxisType> &other, Function &&lambda) const {
+    using index_type = std::vector<size_type>;
+
+    auto is_subset = [] (const QnAxes& src, const QnAxes& dst) {
+      if (src.size() < dst.size())
+        return false;
+
+      for (auto &dst_ax : dst) {
+        const auto &dst_ax_name = dst_ax.Name();
+        if (find_if(cbegin(src), cend(src), [dst_ax_name] (const AxisType& ax) {
+              return ax.Name() == dst_ax_name;
+            }) == cend(src)) {
+          return false;
+        }
+      }
+
+      return true;
+    };
+
+    auto axis_id = [](const QnAxes &axes, const std::string &name) {
+      auto result = distance(cbegin(axes), find_if(cbegin(axes), cend(axes),
+                                                   [&name](const AxisType &ax) {
+                                                     return ax.Name() == name;
+                                                   }));
+      assert(result != axes.size());
+      return result;
+    };
+
+    auto make_axes_id_map = [axis_id, is_subset] (const QnAxes& src, const QnAxes& dest) {
+      assert(src.size() >= dest.size());
+      assert(is_subset(src, dest));
+      index_type dst_to_src;
+      for (auto &axis : dest) {
+        dst_to_src.emplace_back(axis_id(src, axis.Name()));
+      }
+      return dst_to_src;
+    };
+
+    auto get_other_index = [] (const index_type &map,
+                            const index_type& src) -> index_type {
+      index_type result(map.size());
+      size_type dst_id = 0;
+      for (const auto &src_id : map) {
+        result[dst_id] = src[src_id];
+        ++dst_id;
+      }
+      return result;
+    };
+
     DataContainer<T, AxisType> result;
     std::vector<size_type> indices;
     unsigned long index = 0;
-    if (axes_.size() > data.axes_.size()) {
-      for (unsigned long iaxis = 0; iaxis < data.axes_.size() - 1; ++iaxis) {
-        if (axes_[iaxis].Name() != data.axes_[iaxis].Name()) {
-          std::string errormsg = "Axes do not match.";
-          throw std::logic_error(errormsg);
-        }
+    if (axes_.size() >= other.axes_.size()) {
+      if (!is_subset(this->axes_, other.axes_)) {
+        std::string errormsg = "Axes do not match.";
+        throw std::logic_error(errormsg);
       }
       result.AddAxes(axes_);
       indices.reserve(dimension_);
+      const auto other_to_this_map = make_axes_id_map(this->axes_, other.axes_);
       for (const auto &bin_a : data_) {
         GetIndex(indices, index);
-        result.data_[index] = lambda(bin_a, data.At(indices));
+        auto other_index = get_other_index(other_to_this_map, indices);
+        result.data_[index] = lambda(bin_a, other.At(other_index));
         ++index;
       }
     } else {
-      for (unsigned long iaxis = axes_.size() - 1; iaxis > 0; --iaxis) {
-        if (axes_[iaxis].Name() != data.axes_[iaxis].Name()) {
-          std::string errormsg = "Axes do not match.";
-          throw std::logic_error(errormsg);
-        }
+      if (!is_subset(other.axes_, this->axes_)) {
+        std::string errormsg = "Axes do not match.";
+        throw std::logic_error(errormsg);
       }
-      result.AddAxes(data.axes_);
-      indices.reserve(data.dimension_);
-      for (const auto &bin_b : data.data_) {
-        data.GetIndex(indices, index);
-        result.data_[index] = lambda(At(indices), bin_b);
+      result.AddAxes(other.axes_);
+      indices.reserve(other.dimension_);
+      const auto other_to_this_map = make_axes_id_map(other.axes_, this->axes_);
+      for (const auto &bin_b : other.data_) {
+        other.GetIndex(indices, index);
+        auto this_index = get_other_index(other_to_this_map, indices);
+        result.data_[index] = lambda(this->At(this_index), bin_b);
         ++index;
       }
     }
