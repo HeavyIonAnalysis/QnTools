@@ -21,6 +21,7 @@
 #include "BootStrap.hpp"
 #include "Statistics.hpp"
 #include "Stat.hpp"
+#include "TDigest.hpp"
 
 namespace Qn {
 class StatCollect : public Stat {
@@ -32,6 +33,7 @@ class StatCollect : public Stat {
             SAMPLES &&sample_multiplicities_) {
     statistics_.Fill(value, weight);
     boot_strap_.Fill(value, weight, sample_multiplicities_);
+    tdigest_.add(value, weight);
   }
 
   friend StatCollect Merge(const StatCollect &lhs, const StatCollect &rhs);
@@ -39,15 +41,17 @@ class StatCollect : public Stat {
 
   [[nodiscard]] auto &GetStatistics() const { return statistics_; }
   [[nodiscard]] auto &GetBootStrap() const { return boot_strap_; }
+  [[nodiscard]] auto &GetTDigest() const {return tdigest_; }
 
   void SetNumberOfSamples(int n_samples) { boot_strap_.SetNumberOfSamples(n_samples); }
 
  private:
   Statistics statistics_;
   BootStrap boot_strap_;
+  Qn::TDigest tdigest_;
 
   /// \cond CLASSIMP
- ClassDef(StatCollect, 2);
+ ClassDef(StatCollect, 3);
   /// \endcond
 };
 
