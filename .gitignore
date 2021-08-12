@@ -9,3 +9,5 @@ build
 *.swp
 *.swo
 *~
+
+*.root
