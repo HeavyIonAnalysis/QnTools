@@ -22,6 +22,14 @@
 #include <cmath>
 #include <random>
 
+#ifndef ROOT_THREAD_POOL_SIZE
+# if ROOT_VERSION_CODE >= ROOT_VERSION(6, 22, 0)
+#   define ROOT_THREAD_POOL_SIZE (ROOT::GetThreadPoolSize())
+# else
+#   define ROOT_THREAD_POOL_SIZE (ROOT::GetImplicitMTPoolSize())
+# endif
+#endif
+
 namespace Qn::ToyMC {
 class ParticleGenerator {
   static constexpr double kPi = M_PI;
@@ -30,8 +38,8 @@ class ParticleGenerator {
  public:
   explicit ParticleGenerator(std::vector<double> harmonics, int nphi_slices = 100):
     nphi_slices_(nphi_slices),
-    random_engines_(ROOT::GetThreadPoolSize()+1, std::mt19937_64{std::random_device()()}),
-    vns_(harmonics) {}
+        random_engines_(ROOT_THREAD_POOL_SIZE + 1,std::mt19937_64{std::random_device()()}),
+        vns_(harmonics) {}
 
   ROOT::RVec<double> operator()(unsigned int slot, double psi, int multiplicity) {
     auto phis = ROOT::RVec<double>(multiplicity);

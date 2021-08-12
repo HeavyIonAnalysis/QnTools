@@ -24,6 +24,14 @@
 
 #include "Axis.hpp"
 
+#ifndef ROOT_THREAD_POOL_SIZE
+# if ROOT_VERSION_CODE >= ROOT_VERSION(6, 22, 0)
+#   define ROOT_THREAD_POOL_SIZE (ROOT::GetThreadPoolSize())
+# else
+#   define ROOT_THREAD_POOL_SIZE (ROOT::GetImplicitMTPoolSize())
+# endif
+#endif
+
 namespace Qn::ToyMC {
 
 class TrackingDetectorFunctor {
@@ -31,7 +39,7 @@ class TrackingDetectorFunctor {
   static constexpr double k2Pi = 2*kPi;
  public:
   explicit TrackingDetectorFunctor(std::function<double(double)> efficiency_function) :
-  random_engines_(ROOT::GetThreadPoolSize()+1, std::mt19937_64{std::random_device()()}),
+  random_engines_(ROOT_THREAD_POOL_SIZE+1, std::mt19937_64{std::random_device()()}),
   efficiency_function_(efficiency_function) {}
 
   ROOT::RVec<std::size_t> operator()(unsigned int slot, ROOT::RVec<double> &phis) {
