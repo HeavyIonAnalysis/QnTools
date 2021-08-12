@@ -30,6 +30,15 @@
 #include "DataContainer.hpp"
 #include "TemplateFunctions.hpp"
 
+#ifndef ROOT_THREAD_POOL_SIZE
+# if ROOT_VERSION_CODE >= ROOT_VERSION(6, 22, 0)
+#   define ROOT_THREAD_POOL_SIZE (ROOT::GetThreadPoolSize())
+# else
+#   define ROOT_THREAD_POOL_SIZE (ROOT::GetImplicitMTPoolSize())
+# endif
+#endif
+
+
 namespace Qn {
 
 template <typename Helper>
@@ -66,7 +75,7 @@ class AverageHelper : public RActionImpl<AverageHelper<Action>> {
    */
   explicit AverageHelper(Action action) {
     const auto n_slots =
-        ROOT::IsImplicitMTEnabled() ? ROOT::GetThreadPoolSize() : 1;
+        ROOT::IsImplicitMTEnabled() ? ROOT_THREAD_POOL_SIZE : 1;
     for (std::size_t i = 0; i < n_slots; ++i) {
       is_configured_.push_back(false);
       results_.emplace_back(std::make_shared<Action>(action));
