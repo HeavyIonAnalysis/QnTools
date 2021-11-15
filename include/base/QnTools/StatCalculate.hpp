@@ -20,7 +20,6 @@
 
 #include <cmath>
 #include <vector>
-#include <cassert>
 #include <iostream>
 
 #include "Rtypes.h"
@@ -46,9 +45,6 @@ class StatCalculate : public Stat {
     const auto& samples = stats.GetBootStrap();
     sample_means_ = samples.GetMeans();
     sample_weights_ = samples.GetWeights();
-    for (int i = 0; i < sample_means_.size(); ++i) {
-      assert(!std::isnan(sample_means_[i]) || sample_weights_[i] <= 0);
-    }
     if (stats.GetWeightType() == Stat::WeightType::OBSERVABLE) {
       SetWeightType(WeightType::OBSERVABLE);
     } else {
@@ -109,7 +105,6 @@ class StatCalculate : public Stat {
 
   /// Returns the standard error of the mean from bootstrapping using the variance statistic.
   [[nodiscard]] double StdDevOfMeanFromBootstrapVariance() const {
-    assert(VarianceOfMeanFromBootstrap() >= 0);
     return std::sqrt(VarianceOfMeanFromBootstrap());
   }
   /// Returns the sample mean.
