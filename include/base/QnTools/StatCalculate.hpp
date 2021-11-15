@@ -74,7 +74,7 @@ class StatCalculate : public Stat {
   [[nodiscard]] double VarianceOfMeanFromBootstrap() const {
     Statistics stats;
     for (std::size_t i = 0; i < sample_means_.size(); ++i) {
-      if (!TestWeightedValue(sample_means_[i], sample_weights_[i])) {
+      if (std::isnan(sample_means_[i]) && sample_weights_[i] > 0) {
         std::cerr << "Skipping NAN-value with non-zero weight for " << i << "-th sample"  << std::endl;
         continue;
       }
@@ -150,10 +150,6 @@ class StatCalculate : public Stat {
   friend StatCalculate Sqrt(const StatCalculate &);
 
  private:
-  inline
-  static bool TestWeightedValue(double value, double weight) {
-    return !std::isnan(value) || weight <= 0;
-  }
 
   std::vector<double> sample_means_; /// means of bootstrap samples
   std::vector<double> sample_weights_; /// weights of bootstrap samples
