@@ -20,6 +20,7 @@
 
 #include <cmath>
 #include <vector>
+#include <iostream>
 
 #include "Rtypes.h"
 #include "Stat.hpp"
@@ -73,6 +74,10 @@ class StatCalculate : public Stat {
   [[nodiscard]] double VarianceOfMeanFromBootstrap() const {
     Statistics stats;
     for (std::size_t i = 0; i < sample_means_.size(); ++i) {
+      if (std::isnan(sample_means_[i]) && sample_weights_[i] > 0) {
+        std::cerr << "Skipping NAN-value with non-zero weight for " << i << "-th sample"  << std::endl;
+        continue;
+      }
       stats.Fill(sample_means_[i], sample_weights_[i]);
     }
     return stats.Variance();
@@ -145,6 +150,7 @@ class StatCalculate : public Stat {
   friend StatCalculate Sqrt(const StatCalculate &);
 
  private:
+
   std::vector<double> sample_means_; /// means of bootstrap samples
   std::vector<double> sample_weights_; /// weights of bootstrap samples
   double mean_ = 0.; /// mean of the distribution
