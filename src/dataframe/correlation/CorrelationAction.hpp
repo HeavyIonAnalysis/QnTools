@@ -130,7 +130,8 @@ class CorrelationAction<Function, WeightFunction,
 
   template <std::size_t N>
   auto SetReaderInputNames(const std::array<std::string, N> &names) {
-    input_from_reader_names_ = names;
+    input_from_reader_names_.clear();
+    copy(begin(names), end(names), back_inserter(input_from_reader_names_));
   }
 
  private:
@@ -140,7 +141,7 @@ class CorrelationAction<Function, WeightFunction,
   unsigned int n_samples_ = 1;  /// Number of samples used in the ReSampler.
   std::array<std::string, NumberOfInputs>
       input_names_;                 /// Names of the input Q-vectors.
- std::array<std::string, NumberOfInputs>
+ std::vector<std::string>
       input_from_reader_names_;     /// Names of the input Q-vectors.
   AxesConfig event_axes_;           /// Configuration of the event axes.
   Function function_;               /// correlation function.
@@ -231,7 +232,10 @@ class CorrelationAction<Function, WeightFunction,
     reader.Restart();
     auto input_data = std::vector<TTreeReaderValue<DataContainerQVector>>{};
     // Get a vector of TTreeReaderValues.
-    if (input_from_reader_names_.empty()) input_from_reader_names_ = input_names_;
+    if (input_from_reader_names_.empty()) {
+      copy(begin(input_names_), end(input_names_),
+           back_inserter(input_from_reader_names_));
+    }
     std::transform(
         std::begin(input_from_reader_names_), std::end(input_from_reader_names_),
         std::back_inserter(input_data), [&reader](const std::string &name) {
