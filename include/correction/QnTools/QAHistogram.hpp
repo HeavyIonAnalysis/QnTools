@@ -18,6 +18,7 @@
 #ifndef FLOW_QAHISTOGRAM_H
 #define FLOW_QAHISTOGRAM_H
 
+#include <memory>
 #include <utility>
 #include <vector>
 
@@ -25,8 +26,6 @@
 #include "TH2.h"
 #include "TH3F.h"
 #include "TList.h"
-#include "ROOT/RMakeUnique.hxx"
-#include "ROOT/RIntegerSequence.hxx"
 #include "TROOT.h"
 
 #include "Axis.hpp"

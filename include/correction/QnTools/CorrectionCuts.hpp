@@ -1,5 +1,3 @@
-#include <utility>
-
 // Qn Tools
 //
 // Copyright (C) 2020  Lukas Kreis Ilya Selyuzhenkov
@@ -23,9 +21,8 @@
 #include <array>
 #include <vector>
 #include <functional>
-
-#include "ROOT/RMakeUnique.hxx"
-#include "ROOT/RIntegerSequence.hxx"
+#include <memory>
+#include <utility>
 
 #include "InputVariableManager.hpp"
 #include "QAHistogram.hpp"

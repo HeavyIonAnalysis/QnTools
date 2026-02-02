@@ -18,11 +18,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <utility>
 #include <memory>
 #include <utility>
-
-#include "ROOT/RMakeUnique.hxx"
 
 #include "CorrectionAxisSet.hpp"
 #include "SubEventChannels.hpp"

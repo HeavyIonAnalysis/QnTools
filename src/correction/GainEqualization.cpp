@@ -36,8 +36,9 @@
 #include "CorrectionHistogramChannelizedSparse.hpp"
 #include "CorrectionProfileChannelized.hpp"
 #include "CorrectionProfileChannelizedIngress.hpp"
-#include "ROOT/RMakeUnique.hxx"
 #include "SubEventChannels.hpp"
+
+#include <memory>
 /// \cond CLASSIMP
 ClassImp(Qn::GainEqualization);
 /// \endcond

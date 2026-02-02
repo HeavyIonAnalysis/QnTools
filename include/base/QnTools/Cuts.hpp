@@ -1,5 +1,3 @@
-#include <utility>
-
 // Qn Tools
 //
 // Copyright (C) 2020  Lukas Kreis Ilya Selyuzhenkov
@@ -20,9 +18,9 @@
 #ifndef QNCUTS_H
 #define QNCUTS_H
 
-#include "ROOT/RIntegerSequence.hxx"
-#include "ROOT/RMakeUnique.hxx"
 #include <string>
+#include <memory>
+#include <utility>
 
 namespace Qn {
 

@@ -34,7 +34,8 @@
 #include "Alignment.hpp"
 #include "CorrectionAxisSet.hpp"
 #include "DetectorList.hpp"
-#include "ROOT/RMakeUnique.hxx"
+
+#include <memory>
 
 /// \cond CLASSIMP
 ClassImp(Qn::Alignment);
