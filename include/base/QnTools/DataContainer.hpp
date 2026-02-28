@@ -1087,6 +1087,12 @@ template<>
 Long64_t DataContainer<std::pair<bool, float>, float>::Merge(TCollection *inputlist) = delete;
 template<>
 Long64_t DataContainer<Qn::QVector, float>::Merge(TCollection *inputlist) = delete;
+template<>
+Long64_t DataContainer<Qn::QVector>::Merge(TCollection *inputlist) = delete;
+template<>
+Long64_t DataContainer<TH1F>::Merge(TCollection *inputlist) = delete;
+template<>
+Long64_t DataContainer<double>::Merge(TCollection *inputlist) = delete;
 
 };// namespace Qn
 #endif
