@@ -44,7 +44,6 @@
 #pragma link C++ typedef Qn::AxisF;
 #pragma link C++ typedef Qn::AxisD;
 #pragma link C++ typedef Qn::BinnedStatistics;
-#pragma link C++ typedef Qn::DataContainerStatistics;
 #pragma link C++ typedef Qn::DataContainerStatCollect;
 #pragma link C++ typedef Qn::DataContainerStatCalculate;
 #pragma link C++ typedef Qn::DataContainerQVector;
