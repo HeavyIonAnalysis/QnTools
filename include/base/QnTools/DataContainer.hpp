@@ -905,6 +905,13 @@ class DataContainer : public TObject {
  */
   virtual void Browse(TBrowser *b) { (void) b; }
 
+  /**
+ * Tells the TBrowser whether the DataContainer can be expanded.
+ * The web-based TBrowser only calls Browse() for objects which are folders.
+ * Implementation for template specializations please see below.
+ */
+  Bool_t IsFolder() const override { return kFALSE; }
+
   void Fill(const double value, const double weight, const std::vector<double> &coordinates) {
     (void) value;
     (void) weight;
@@ -964,6 +971,15 @@ template<>
 inline void DataContainer<StatCalculate, AxisD>::Browse(TBrowser *b) {
   DataContainerHelper::Browse(this, b);
 }
+
+template<>
+inline Bool_t DataContainer<StatCollect, AxisD>::IsFolder() const { return kTRUE; }
+
+template<>
+inline Bool_t DataContainer<Statistics, AxisD>::IsFolder() const { return kTRUE; }
+
+template<>
+inline Bool_t DataContainer<StatCalculate, AxisD>::IsFolder() const { return kTRUE; }
 
 template<>
 inline void DataContainer<Statistics, AxisD>::NDraw(Option_t *option, const std::string &axis_name) {

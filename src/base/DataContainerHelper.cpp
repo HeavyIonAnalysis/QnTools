@@ -122,101 +122,93 @@ TGraphErrors *DataContainerHelper::ToTGraph(const DataContainer<StatCalculate, A
   return graph;
 }
 
-void DataContainerHelper::Browse(DataContainerStatistic *data, TBrowser *b) {
-  using DrawErrorGraph = Internal::ProjectionDrawable<TGraphErrors *>;
-  if (!data->list_) data->list_ = new TList();
-  data->list_->SetOwner(true);
-  for (auto &axis : data->axes_) {
+namespace {
+/**
+ * Adds the one-dimensional projections of the DataContainer as TGraphErrors to the list.
+ * The graphs are added directly (not wrapped), so that both the classic and the web-based TBrowser
+ * know how to draw them.
+ */
+template<typename DataContainer>
+void AddProjectionGraphs(DataContainer &data, TList *list) {
+  for (const auto &axis : data.GetAxes()) {
     TGraphErrors *graph;
-    if (data->dimension_ > 1) {
-      graph = DataContainerHelper::ToTGraph(data->Projection({axis.Name()}),
-                                            Errors::Yonly);
+    if (data.GetDimension() > 1) {
+      graph = DataContainerHelper::ToTGraph(data.Projection({axis.Name()}), DataContainerHelper::Errors::Yonly);
     } else {
-      graph = DataContainerHelper::ToTGraph(*data, Errors::Yonly);
+      graph = DataContainerHelper::ToTGraph(data, DataContainerHelper::Errors::Yonly);
     }
     graph->SetName(axis.Name().data());
     graph->SetTitle(axis.Name().data());
     graph->GetXaxis()->SetTitle(axis.Name().data());
-    auto *drawable = new DrawErrorGraph(graph);
-    data->list_->Add(drawable);
+    list->Add(graph);
   }
-  if (data->dimension_ > 1) {
-    auto list2d = new TList();
-    for (auto iaxis = std::begin(data->axes_); iaxis < std::end(data->axes_);
-         ++iaxis) {
-      for (auto jaxis = std::begin(data->axes_); jaxis < std::end(data->axes_);
-           ++jaxis) {
-        if (iaxis != jaxis) {
-          auto proj = data->Projection({iaxis->Name(), jaxis->Name()});
-          auto axes = proj.GetAxes();
-          auto axis1 = axes.at(0);
-          auto axis2 = axes.at(1);
-          auto name = (jaxis->Name() + ":" + iaxis->Name());
-          auto histo2d = new TH2F(
-              name.c_str(), name.c_str(), axis1.size(), axis1.GetFirstBinEdge(),
-              axis1.GetLastBinEdge(), axis2.size(), axis2.GetFirstBinEdge(),
-              axis2.GetLastBinEdge());
-          for (int i = 0; i < proj.size(); ++i) {
-            auto value = proj.At(i).Mean();
-            auto bins = proj.GetIndex(i);
-            histo2d->SetBinContent(bins[0]+1, bins[1]+1, value);
+}
+
+void AddToBrowser(TList *list, TBrowser *b) {
+  for (int i = 0; i < list->GetSize(); ++i) {
+    b->Add(list->At(i));
+  }
+}
+}// namespace
+
+void DataContainerHelper::Browse(DataContainerStatistic *data, TBrowser *b) {
+  if (!data->list_) {
+    data->list_ = new TList();
+    data->list_->SetOwner(true);
+  }
+  // The projections are created only once, as the browser may call Browse() repeatedly.
+  if (data->list_->IsEmpty()) {
+    AddProjectionGraphs(*data, data->list_);
+    if (data->dimension_ > 1) {
+      auto list2d = new TList();
+      for (auto iaxis = std::begin(data->axes_); iaxis < std::end(data->axes_);
+           ++iaxis) {
+        for (auto jaxis = std::begin(data->axes_); jaxis < std::end(data->axes_);
+             ++jaxis) {
+          if (iaxis != jaxis) {
+            auto proj = data->Projection({iaxis->Name(), jaxis->Name()});
+            auto axes = proj.GetAxes();
+            auto axis1 = axes.at(0);
+            auto axis2 = axes.at(1);
+            auto name = (jaxis->Name() + ":" + iaxis->Name());
+            auto histo2d = new TH2F(
+                name.c_str(), name.c_str(), axis1.size(), axis1.GetFirstBinEdge(),
+                axis1.GetLastBinEdge(), axis2.size(), axis2.GetFirstBinEdge(),
+                axis2.GetLastBinEdge());
+            histo2d->SetDirectory(nullptr);  // owned by list2d, not by the current directory
+            for (int i = 0; i < proj.size(); ++i) {
+              auto value = proj.At(i).Mean();
+              auto bins = proj.GetIndex(i);
+              histo2d->SetBinContent(bins[0]+1, bins[1]+1, value);
+            }
+            list2d->Add(histo2d);
           }
-          list2d->Add(histo2d);
         }
       }
+      list2d->SetName("2D");
+      list2d->SetOwner(true);
+      data->list_->Add(list2d);
     }
-    list2d->SetName("2D");
-    list2d->SetOwner(true);
-    data->list_->Add(list2d);
   }
-  for (int i = 0; i < data->list_->GetSize(); ++i) {
-    b->Add(data->list_->At(i));
-  }
+  AddToBrowser(data->list_, b);
 }
 
 void DataContainerHelper::Browse(DataContainerStatCalculate *data, TBrowser *b) {
-  using DrawErrorGraph = Internal::ProjectionDrawable<TGraphErrors *>;
-  if (!data->list_) data->list_ = new TList();
-  data->list_->SetOwner(true);
-  for (auto &axis : data->axes_) {
-    TGraphErrors *graph;
-    if (data->dimension_ > 1) {
-      graph = DataContainerHelper::ToTGraph(data->Projection({axis.Name()}),
-                                            Errors::Yonly);
-    } else {
-      graph = DataContainerHelper::ToTGraph(*data, Errors::Yonly);
-    }
-    graph->SetName(axis.Name().data());
-    graph->SetTitle(axis.Name().data());
-    graph->GetXaxis()->SetTitle(axis.Name().data());
-    auto *drawable = new DrawErrorGraph(graph);
-    data->list_->Add(drawable);
+  if (!data->list_) {
+    data->list_ = new TList();
+    data->list_->SetOwner(true);
   }
-  for (int i = 0; i < data->list_->GetSize(); ++i) {
-    b->Add(data->list_->At(i));
-  }
+  if (data->list_->IsEmpty()) AddProjectionGraphs(*data, data->list_);
+  AddToBrowser(data->list_, b);
 }
 
 void DataContainerHelper::Browse(DataContainerStatCollect *data, TBrowser *b) {
-  using DrawErrorGraph = Internal::ProjectionDrawable<TGraphErrors *>;
-  if (!data->list_) data->list_ = new TList();
-  data->list_->SetOwner(true);
-  for (auto &axis : data->axes_) {
-    TGraphErrors *graph;
-    if (data->dimension_ > 1) {
-      graph = DataContainerHelper::ToTGraph(data->Projection({axis.Name()}), Errors::Yonly);
-    } else {
-      graph = DataContainerHelper::ToTGraph(*data, Errors::Yonly);
-    }
-    graph->SetName(axis.Name().data());
-    graph->SetTitle(axis.Name().data());
-    graph->GetXaxis()->SetTitle(axis.Name().data());
-    auto *drawable = new DrawErrorGraph(graph);
-    data->list_->Add(drawable);
+  if (!data->list_) {
+    data->list_ = new TList();
+    data->list_->SetOwner(true);
   }
-  for (int i = 0; i < data->list_->GetSize(); ++i) {
-    b->Add(data->list_->At(i));
-  }
+  if (data->list_->IsEmpty()) AddProjectionGraphs(*data, data->list_);
+  AddToBrowser(data->list_, b);
 }
 
 }// namespace Qn

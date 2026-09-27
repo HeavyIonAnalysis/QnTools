@@ -34,34 +34,6 @@ namespace Qn {
 template<typename T, typename AxisType>
 class DataContainer;
 
-namespace Internal {
-
-/**
- * @brief       Template class to facilitate the drawing of Projections of DataContainer.
- * @attention   Takes ownership of graph and will delete it at the end of the lifetime.
- * @tparam T    Type of Graph to draw.
- */
-template<typename T>
-struct ProjectionDrawable : public TNamed {
-  ProjectionDrawable() = default;
-  ~ProjectionDrawable() override { delete graph; }
-  explicit ProjectionDrawable(T projection) : graph(std::move(projection)) {
-    SetName(projection->GetName());
-    SetTitle(projection->GetTitle());
-  }
-  void Browse(TBrowser *b) override {
-    TString opt = gEnv->GetValue("TGraph.BrowseOption", "");
-    if (opt.IsNull()) {
-      opt = b ? b->GetDrawOption() : "AlP PLC PMC Z";
-      opt = (opt == "") ? "ALP PMC PLC Z" : opt.Data();
-    }
-    graph->Draw(opt);
-    gPad->Update();
-  }
-  T graph = nullptr;
-};
-}// namespace Internal
-
 /**
  * Helper class for DataContainer used for visualization.
  */

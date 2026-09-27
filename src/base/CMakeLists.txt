@@ -23,6 +23,12 @@ target_include_directories(${PROJECT_NAME}
         )
 target_link_libraries(${PROJECT_NAME} PRIVATE ROOT::Core ROOT::Gpad)
 
+# Registers the DataContainer in the web-based TBrowser, if ROOT is built with it.
+if (TARGET ROOT::ROOTBrowsable)
+    target_sources(${PROJECT_NAME} PRIVATE DataContainerBrowseProvider.cpp)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ROOT::ROOTBrowsable)
+endif ()
+
 # link to the gtest library if test are enabled
 IF (QnTools_BUILD_TESTS)
     list(APPEND SOURCES QVector.test.cpp
