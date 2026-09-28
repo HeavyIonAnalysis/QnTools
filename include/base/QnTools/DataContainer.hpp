@@ -910,7 +910,7 @@ class DataContainer : public TObject {
  * The web-based TBrowser only calls Browse() for objects which are folders.
  * Implementation for template specializations please see below.
  */
-  Bool_t IsFolder() const override { return kFALSE; }
+  virtual Bool_t IsFolder() const { return kFALSE; }
 
   void Fill(const double value, const double weight, const std::vector<double> &coordinates) {
     (void) value;
