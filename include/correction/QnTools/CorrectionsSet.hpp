@@ -15,6 +15,7 @@
 /// \brief Set of corrections on Qn vector support within Q vector correction framework
 ///
 
+#include <iterator>
 #include <list>
 #include <set>
 
@@ -95,7 +96,7 @@ class CorrectionsSet {
 /// \return TRUE if the correction step is being applied
   Bool_t IsCorrectionStepBeingApplied(const char *step) const {
     for (auto &entry : list_) {
-      if (std::string(entry->GetName()).find(step)) {
+      if (std::string(entry->GetName()).find(step) != std::string::npos) {
         return entry->IsBeingApplied();
       }
     }
@@ -104,7 +105,7 @@ class CorrectionsSet {
 
   bool IsLastStepApplied() const {
     if (!list_.empty()) {
-      return (*list_.end())->IsBeingApplied();
+      return (*std::prev(list_.end()))->IsBeingApplied();
     }
     return false;
   }

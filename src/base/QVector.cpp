@@ -46,7 +46,7 @@ QVector operator+(const QVector a, const QVector b) {
                  });
   c.n_ = at.n_ + bt.n_;
   c.sum_weights_ = at.sum_weights_ + bt.sum_weights_;
-  c.bits_ = b.bits_;
+  c.bits_ = a.bits_ | b.bits_;
   return c;
 }
 

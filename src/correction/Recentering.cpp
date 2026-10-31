@@ -159,6 +159,8 @@ bool Recentering::ProcessCorrections() {
             if (fApplyWidthEqualization) {
               widthX = fInputHistograms->GetXBinError(harmonic, bin);
               widthY = fInputHistograms->GetYBinError(harmonic, bin);
+              if (widthX == 0.0F) widthX = 1.0F;
+              if (widthY == 0.0F) widthY = 1.0F;
             }
             fCorrectedQnVector->SetX(harmonic, (fSubEvent->GetCurrentQnVector()->x(harmonic) - fInputHistograms->GetXBinContent(harmonic, bin)) / widthX);
             fCorrectedQnVector->SetY(harmonic, (fSubEvent->GetCurrentQnVector()->y(harmonic) - fInputHistograms->GetYBinContent(harmonic, bin)) / widthY);
