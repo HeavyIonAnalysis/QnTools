@@ -93,6 +93,8 @@ inline void SubEventTracks::Clear() {
   fCorrectedQ2nVector.Reset();
   /* and now clear the the input data bank */
   fDataVectorBank.clear();
+  /* and clear the shared storage for means */
+  ClearSharedStorage();
 }
 
 /// Ask for processing corrections for the involved detector configuration

@@ -196,11 +196,23 @@ bool Recentering::ProcessDataCollection() {
     case State::CALIBRATION:
       /* collect the data needed to further produce correction parameters if the current Qn vector is good enough */
       if (fInputQnVector->IsGoodQuality()) {
-
         harmonic = fInputQnVector->GetFirstHarmonic();
         while (harmonic != -1) {
           fCalibrationHistograms->FillX(harmonic, fInputQnVector->x(harmonic));
           fCalibrationHistograms->FillY(harmonic, fInputQnVector->y(harmonic));
+          
+          // Also populate shared storage for 2n data
+          if (fSubEvent) {
+            std::map<int, std::pair<Float_t, Float_t>> sharedMeans = fSubEvent->GetSharedHarmonicMeans();
+            sharedMeans[harmonic] = std::make_pair(fInputQnVector->x(harmonic), fInputQnVector->y(harmonic));
+            fSubEvent->SetSharedHarmonicMeans(sharedMeans);
+            
+            // Also populate 2n means
+            std::map<int, std::pair<Float_t, Float_t>> sharedDoubleMeans = fSubEvent->GetSharedDoubleHarmonicMeans();
+            sharedDoubleMeans[harmonic * 2] = std::make_pair(fInputQnVector->x(harmonic), fInputQnVector->y(harmonic));
+            fSubEvent->SetSharedDoubleHarmonicMeans(sharedDoubleMeans);
+          }
+          
           harmonic = fInputQnVector->GetNextHarmonic(harmonic);
         }
       }
@@ -213,6 +225,18 @@ bool Recentering::ProcessDataCollection() {
         while (harmonic != -1) {
           fCalibrationHistograms->FillX(harmonic, fInputQnVector->x(harmonic));
           fCalibrationHistograms->FillY(harmonic, fInputQnVector->y(harmonic));
+          
+          // Also populate shared storage for 2n data
+          if (fSubEvent) {
+            std::map<int, std::pair<Float_t, Float_t>> sharedMeans = fSubEvent->GetSharedHarmonicMeans();
+            sharedMeans[harmonic] = std::make_pair(fInputQnVector->x(harmonic), fInputQnVector->y(harmonic));
+            fSubEvent->SetSharedHarmonicMeans(sharedMeans);
+            
+            // Also populate 2n means
+            std::map<int, std::pair<Float_t, Float_t>> sharedDoubleMeans = fSubEvent->GetSharedDoubleHarmonicMeans();
+            sharedDoubleMeans[harmonic * 2] = std::make_pair(fInputQnVector->x(harmonic), fInputQnVector->y(harmonic));
+            fSubEvent->SetSharedDoubleHarmonicMeans(sharedDoubleMeans);
+          }
           harmonic = fInputQnVector->GetNextHarmonic(harmonic);
         }
       }

@@ -139,6 +139,25 @@ class SubEvent {
   /// Pure virtual function
   /// \return TRUE if it is a tracking detector configuration
   virtual Bool_t GetIsTrackingDetector() const = 0;
+
+  /// Get the shared harmonic means map
+  /// \return reference to the shared harmonic means map
+  const std::map<int, std::pair<Float_t, Float_t>>& GetSharedHarmonicMeans() const { return fSharedHarmonicMeans; }
+  /// Get the shared double harmonic means map
+  /// \return reference to the shared double harmonic means map
+  const std::map<int, std::pair<Float_t, Float_t>>& GetSharedDoubleHarmonicMeans() const { return fSharedDoubleHarmonicMeans; }
+  /// Set the shared harmonic means map
+  /// \param means the means to set
+  void SetSharedHarmonicMeans(const std::map<int, std::pair<Float_t, Float_t>>& means) { fSharedHarmonicMeans = means; }
+  /// Set the shared double harmonic means map
+  /// \param means the means to set
+  void SetSharedDoubleHarmonicMeans(const std::map<int, std::pair<Float_t, Float_t>>& means) { fSharedDoubleHarmonicMeans = means; }
+  /// Clear shared storage for next event
+  void ClearSharedStorage() {
+    fSharedHarmonicMeans.clear();
+    fSharedDoubleHarmonicMeans.clear();
+  }
+
   /// Asks for support data structures creation
   ///
   /// The request is transmitted to the different corrections.
@@ -288,6 +307,10 @@ class SubEvent {
   static const char *szPlainQnVectorName; ///< the name of the Qn plain, not corrected Qn vectors
   static const char *szQAQnAverageHistogramName; ///< name and title for plain Qn vector average QA histograms
   static constexpr unsigned int INITIALSIZE = 4; ///< The default initial size of data vectors banks
+
+  /// Shared storage for both harmonic n and 2n means to avoid redundant collection
+  std::map<int, std::pair<Float_t, Float_t>> fSharedHarmonicMeans; //!< x_n, y_n means per harmonic
+  std::map<int, std::pair<Float_t, Float_t>> fSharedDoubleHarmonicMeans; //!< x_{2n}, y_{2n} means per 2n harmonic
 
 /// \cond CLASSIMP
  ClassDef(SubEvent, 3);

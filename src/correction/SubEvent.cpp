@@ -103,6 +103,9 @@ std::string SubEvent::GetName() const {
 }
 
 void SubEvent::BuildQnVector() {
+  /* Clear shared storage before building vectors */
+  ClearSharedStorage();
+  
   fPlainQnVector.SetNormalization(QVector::Normalization::NONE);
   fPlainQ2nVector.SetNormalization(QVector::Normalization::NONE);
   for (const auto &dataVector : fDataVectorBank) {

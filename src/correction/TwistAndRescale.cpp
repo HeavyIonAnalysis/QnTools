@@ -184,7 +184,7 @@ void TwistAndRescale::CreateCorrectionHistograms() {
 void TwistAndRescale::AttachInput(TList *list) {
   switch (fTwistAndRescaleMethod) {
     case Method::DOUBLE_HARMONIC:
-      /* TODO: basically we are re producing half of the information already produce for recentering correction. Re use it! */
+      /* the shared storage on SubEvent provides the 2n means collected by the recentering step */
       if (fDoubleHarmonicInputHistograms->AttachHistograms(list)) {
         fState = State::APPLYCOLLECT;
       }
@@ -292,7 +292,6 @@ bool TwistAndRescale::ProcessCorrections() {
       /* logging */
       switch (fTwistAndRescaleMethod) {
         case Method::DOUBLE_HARMONIC: {
-          /* TODO: basically we are re producing half of the information already produce for recentering correction. Re use it! */
           if (fSubEvent->GetCurrentQnVector()->IsGoodQuality()) {
             fCorrectedQnVector->CopyNumberOfContributors(*fSubEvent->GetCurrentQnVector());
             fTwistCorrectedQnVector->CopyNumberOfContributors(*fCorrectedQnVector);
@@ -470,14 +469,15 @@ Bool_t TwistAndRescale::ProcessDataCollection() {
       /* logging */
       switch (fTwistAndRescaleMethod) {
         case Method::DOUBLE_HARMONIC: {
-          /* remember, we store in the profiles the double harmonic while the Q2n vector stores them single */
-          auto plainQ2nVector = fSubEvent->GetPlainQ2nVector();
-          Int_t harmonic = fCorrectedQnVector->GetFirstHarmonic();
-          if (plainQ2nVector.IsGoodQuality()) {
-            while (harmonic != -1) {
-              fDoubleHarmonicCalibrationHistograms->FillX(harmonic * 2, plainQ2nVector.x(harmonic));
-              fDoubleHarmonicCalibrationHistograms->FillY(harmonic * 2, plainQ2nVector.y(harmonic));
-              harmonic = fCorrectedQnVector->GetNextHarmonic(harmonic);
+          /* read from shared storage instead of collecting directly */
+          if (fSubEvent) {
+            const auto& sharedMeans = fSubEvent->GetSharedDoubleHarmonicMeans();
+            for (const auto& pair : sharedMeans) {
+              Int_t harmonic = pair.first;
+              Float_t x = pair.second.first;
+              Float_t y = pair.second.second;
+              fDoubleHarmonicCalibrationHistograms->FillX(harmonic, x);
+              fDoubleHarmonicCalibrationHistograms->FillY(harmonic, y);
             }
           }
         } break;
@@ -497,14 +497,15 @@ Bool_t TwistAndRescale::ProcessDataCollection() {
       /* logging */
       switch (fTwistAndRescaleMethod) {
         case Method::DOUBLE_HARMONIC: {
-          /* remember, we store in the profiles the double harmonic while the Q2n vector stores them single */
-          QVector plainQ2nVector = fSubEvent->GetPlainQ2nVector();
-          Int_t harmonic = fCorrectedQnVector->GetFirstHarmonic();
-          if (plainQ2nVector.IsGoodQuality()) {
-            while (harmonic != -1) {
-              fDoubleHarmonicCalibrationHistograms->FillX(harmonic * 2, plainQ2nVector.x(harmonic));
-              fDoubleHarmonicCalibrationHistograms->FillY(harmonic * 2, plainQ2nVector.y(harmonic));
-              harmonic = fCorrectedQnVector->GetNextHarmonic(harmonic);
+          /* read from shared storage instead of collecting directly */
+          if (fSubEvent) {
+            const auto& sharedMeans = fSubEvent->GetSharedDoubleHarmonicMeans();
+            for (const auto& pair : sharedMeans) {
+              Int_t harmonic = pair.first;
+              Float_t x = pair.second.first;
+              Float_t y = pair.second.second;
+              fDoubleHarmonicCalibrationHistograms->FillX(harmonic, x);
+              fDoubleHarmonicCalibrationHistograms->FillY(harmonic, y);
             }
           }
         } break;

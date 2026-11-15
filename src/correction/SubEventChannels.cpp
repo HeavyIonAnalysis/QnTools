@@ -480,6 +480,8 @@ void SubEventChannels::Clear() {
   fCorrectedQ2nVector.Reset();
   /* and now clear the the input data bank */
   fDataVectorBank.clear();
+  /* and clear the shared storage for means */
+  ClearSharedStorage();
 }
 
 }// namespace Qn
